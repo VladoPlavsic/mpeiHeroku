@@ -22,6 +22,8 @@ from app.models.user import UserInDB
 
 router = APIRouter()
 
+
+#TODO: On update photo delete old key!!!
 @router.put("/team", response_model=TeamMemberInDBModel, name="put:about-team", status_code=HTTP_200_OK)
 async def update_team_member(
     updated: UpdateTeamMemberModel = Body(...),
