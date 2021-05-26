@@ -176,4 +176,4 @@ async def user_get_user(
 
     response = await user_repo.get_user_by_email(email=user.email)
 
-    return PublicUserInDB(**user.dict(), access_token=AccessToken(access_token=user.jwt), token_type="bearer")
+    return PublicUserInDB(**user.dict(), access_token=AccessToken(access_token=user.jwt, token_type="bearer"))
