@@ -172,6 +172,8 @@ async def user_buy_subject_access(
 async def user_get_user(
     user = Depends(get_user_from_token),
     user_repo: UsersDBRepository = Depends(get_db_repository(UsersDBRepository)),
-) -> None:
+) -> PublicUserInDB:
 
-    return await user_repo.get_user_by_email(email=user.email)
+    response = await user_repo.get_user_by_email(email=user.email)
+
+    return PublicUserInDB(**user.dict(), access_token=AccessToken(access_token=user.jwt), token_type="bearer")
