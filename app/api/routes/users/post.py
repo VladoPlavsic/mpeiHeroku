@@ -166,3 +166,12 @@ async def user_buy_subject_access(
     await user_repo.add_subject_to_user(user_id=user.id, subject_id=subject_id, days=200)
 
     return None
+
+# get
+@router.get("/user")
+async def user_get_user(
+    user = Depends(get_user_from_token),
+    user_repo: UsersDBRepository = Depends(get_db_repository(UsersDBRepository)),
+) -> None:
+
+    return await user_repo.get_user_by_email(email=user.email)
