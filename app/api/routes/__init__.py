@@ -56,3 +56,22 @@ router.include_router(news_put_router, prefix="/news", tags=['news'])
 router.include_router(news_delete_router, prefix="/news", tags=['news'])
 
 
+
+# test route for YOMONEEY REMOVE!!!
+
+
+import logging
+
+logger = logging.getLogger(__name__)
+
+# Cron job for 
+@router.get("/cron")
+def cron():
+    logger.warn("---- ACCEPTED CRON -----")
+
+@router.post("/com")
+def test(data):
+    logger.warn("------ ACCEPTED THIS -----")
+    logger.warn(data)
+    logger.warn("------ ACCEPTED THIS -----")
+    return None

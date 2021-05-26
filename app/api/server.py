@@ -36,6 +36,13 @@ def get_application():
         logger.warn("Updating sharing links invoked")
         update()
 
+    @app.on_event("startup")
+    @repeat_every(seconds=60 * 50) # update every 50 mins
+    def keep_server_alive() -> None:
+        logger.warn("Updating sharing links invoked")
+        r = requests.get("http://localhost:1337/api/cron/")
+
+
 
     app.include_router(api_router, prefix="/api")
 
