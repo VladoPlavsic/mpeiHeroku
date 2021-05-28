@@ -1,18 +1,12 @@
 from typing import List
-from fastapi import APIRouter, Depends, Path, HTTPException
+
+from fastapi import APIRouter, Depends, HTTPException
 from starlette.status import HTTP_200_OK
 
 from app.db.repositories.private.private import PrivateDBRepository
-from app.cdn.repositories.private.private import PrivateYandexCDNRepository
 
 from app.api.dependencies.database import get_db_repository
-from app.api.dependencies.cdn import get_cdn_repository
 from app.api.dependencies.auth import get_user_from_token, is_superuser, is_verified
-
-# request models
-from app.models.private import SubjectGetModel
-from app.models.private import BranchGetModel
-from app.models.private import LectureGetModel
 
 # ###
 # response models
@@ -22,13 +16,15 @@ from app.models.private import GradeResponse
 from app.models.private import SubjectResponse
 from app.models.private import BranchResponse
 from app.models.private import LectureResponse
-# content
-from app.models.private import VideoInDB
-from app.models.private import BookInDB
-from app.models.private import PresentationInDB
-from app.models.private import GameInDB
 # material
 from app.models.private import MaterialResponse
+# offers
+from app.models.private import AvailableGradeSubscriptionOffers
+from app.models.private import AvailableSubjectSubscriptionOffers
+# plans
+from app.models.private import AvailableGradeSubscriptionPlans
+from app.models.private import AvailableSubjectSubscriptionPlans
+
 
 from app.models.user import UserInDB
 
@@ -37,7 +33,25 @@ from app.api.dependencies.auth import get_user_from_token
 
 router = APIRouter()
 
-@router.get("/grade/offer", response_model=GradeResponse, name="private:get-grades-offer", status_code=HTTP_200_OK)
+# ###
+# GRADES
+# ###
+@router.get("/grade/subscription/plans", response_model=List[AvailableGradeSubscriptionPlans], name="privete:get-grade-subscription-offers", status_code=HTTP_200_OK)
+async def get_grade_subscription_plans(
+    db_repo: PrivateDBRepository = Depends(get_db_repository(PrivateDBRepository)),
+    ) -> List[AvailableGradeSubscriptionPlans]:
+
+    return await db_repo.select_all_grade_subscription_plans()
+
+@router.get("/grade/subscription/offers", response_model=List[AvailableGradeSubscriptionOffers], name="privete:get-grade-subscription-offers", status_code=HTTP_200_OK)
+async def get_grade_subscription_offers(
+    db_repo: PrivateDBRepository = Depends(get_db_repository(PrivateDBRepository)),
+    ) -> List[AvailableGradeSubscriptionOffers]:
+
+    return await db_repo.select_all_grade_subscription_offers()
+
+
+@router.get("/grade/available", response_model=GradeResponse, name="private:get-grades-offer", status_code=HTTP_200_OK)
 async def get_grade_offers(
     db_repo: PrivateDBRepository = Depends(get_db_repository(PrivateDBRepository)),
     ) -> GradeResponse:
@@ -72,7 +86,25 @@ async def get_private_grades(
         response = await db_repo.select_grades()
         return GradeResponse(grades=response)
 
-@router.get("/subject/offer", response_model=SubjectResponse, name="private:get-subjects-offer", status_code=HTTP_200_OK)
+
+# ###
+# SUBJECTS
+# ###
+@router.get("/subject/subscription/plans", response_model=List[AvailableSubjectSubscriptionPlans], name="privete:get-subject-subscription-plans", status_code=HTTP_200_OK)
+async def get_grade_subscription_plans(
+    db_repo: PrivateDBRepository = Depends(get_db_repository(PrivateDBRepository)),
+    ) -> List[AvailableSubjectSubscriptionPlans]:
+
+    return await db_repo.select_all_subject_subscription_plans()
+
+@router.get("/subject/subscription/offers", response_model=List[AvailableSubjectSubscriptionOffers], name="privete:get-subject-subscription-offers", status_code=HTTP_200_OK)
+async def get_subject_subscription_offers(
+    db_repo: PrivateDBRepository = Depends(get_db_repository(PrivateDBRepository)),
+    ) -> List[AvailableSubjectSubscriptionOffers]:
+
+    return await db_repo.select_all_subject_subscription_offers()
+
+@router.get("/subject/available", response_model=SubjectResponse, name="private:get-subjects-offer", status_code=HTTP_200_OK)
 async def get_subject_offer(
     grade_name_en: str,
     db_repo: PrivateDBRepository = Depends(get_db_repository(PrivateDBRepository)),
@@ -123,6 +155,24 @@ async def get_private_subjects(
     else: # if superuser
         response = await db_repo.select_subjects(fk=fk.id)
         return SubjectResponse(subjects=response, fk=fk.id, path=fk.name_ru)
+
+
+# ###
+# BRANCHES
+# ###
+
+
+@router.get("/branch/available", response_model=BranchResponse, name="private:get-branches", status_code=HTTP_200_OK)
+async def get_private_branches(
+    grade_name_en: str,
+    subject_name_en: str,
+    db_repo: PrivateDBRepository = Depends(get_db_repository(PrivateDBRepository)),
+    ) -> BranchResponse:
+
+    (fk, path) = await db_repo.get_subject_by_name(grade_name=grade_name_en, subject_name=subject_name_en)
+    response = await db_repo.select_branches(fk=fk.id)
+
+    return BranchResponse(branches=response, fk=fk.id, path=path + '/' + fk.name_ru)
 
 @router.get("/branch", response_model=BranchResponse, name="private:get-branches", status_code=HTTP_200_OK)
 async def get_private_branches(
@@ -175,6 +225,23 @@ async def get_private_branches(
         response = await db_repo.select_branches(fk=fk.id)
 
         return BranchResponse(branches=response, fk=fk.id, path=path + '/' + fk.name_ru)
+
+
+# ###
+# LECTURES
+# ###
+
+@router.get("/lecture/available", response_model=LectureResponse, name="private:get-lectures", status_code=HTTP_200_OK)
+async def get_private_lectures(
+    grade_name_en: str,
+    subject_name_en: str,
+    branch_name_en: str,
+    db_repo: PrivateDBRepository = Depends(get_db_repository(PrivateDBRepository)),
+    ) -> LectureResponse:
+
+    (fk, path) = await db_repo.get_branch_by_name(grade_name=grade_name_en, subject_name=subject_name_en, branch_name=branch_name_en)
+    response = await db_repo.select_lectures(fk=fk.id)
+    return LectureResponse(lectures=response, fk=fk.id, path=path + '/' + fk.name_ru)
 
 
 @router.get("/lecture", response_model=LectureResponse, name="private:get-lectures", status_code=HTTP_200_OK)

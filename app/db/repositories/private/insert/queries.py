@@ -1,6 +1,7 @@
 from typing import List
 
 from app.models.private import PresentationMediaCreate
+from app.db.repositories.parsers import string_or_null
 
 import logging
 
@@ -77,7 +78,19 @@ def insert_presentation_media_query(presentation, media_type , medium: List[Pres
         f"SELECT (private.insert_{presentation}_{media_type}('{{{foreign_keys}}}'::int[], '{{{order_numbers}}}'::int[], '{{{urls}}}', '{{{keys}}}')).*"
 
 
-# timestamp
+# subscriptions
+# plans
+def insert_available_grade_plans_query(name: str, price: float, month_count: int) -> str:
+    return \
+        f"SELECT subscriptions.insert_available_grade_plans({string_or_null(name)}, {price}, {month_count})"
+
+def insert_available_subject_plans_query(name: str, price: float, month_count: int) -> str:
+    return \
+        f"SELECT subscriptions.insert_available_subject_plans({string_or_null(name)}, {price}, {month_count})"
+
+
+#TODO: Find out if they are still used (I don't think they are)
+# timestamp 
 def check_timestamp_is_set_query() -> str:
     return "SELECT COUNT(*) AS count FROM private.timestamp;"
 

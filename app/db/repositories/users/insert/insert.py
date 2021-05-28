@@ -33,12 +33,16 @@ class UserDBInsertRepository(BaseDBRepository):
     async def verify_email(self, *, user_id: int):
         await self.__execute(query=verify_email_query(user_id=user_id))
 
-
-    async def add_grade_to_user(self, *, user_id: int, grade_id: int, days: int, for_life: bool = False):
-        await self.__execute(query=add_grade_to_user_query(user_id=user_id, grade_id=grade_id, days=days, for_life=for_life))
-
-    async def add_subject_to_user(self, *, user_id: int, subject_id: int, days: int, for_life: bool = False):
-        await self.__execute(query=add_subject_to_user_query(user_id=user_id, subject_id=subject_id, days=days, for_life=for_life))
+    async def add_product_to_user(self, *, user_id: int, product_id: int, subscription_fk: int , level: int):
+        # ###
+        # Level: 0 or 1
+        # 0 - grades
+        # 1 - subjects
+        # ###
+        if not level:
+            await self.__execute(query=add_grade_to_user_query(user_id=user_id, grade_id=product_id, subscription_fk=subscription_fk))
+        else:
+            await self.__execute(query=add_subject_to_user_query(user_id=user_id, subject_id=product_id, subscription_fk=subscription_fk))
 
     async def __execute(self, *, query): 
         try:

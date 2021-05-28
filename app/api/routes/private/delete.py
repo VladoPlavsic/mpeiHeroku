@@ -171,7 +171,6 @@ async def delete_private_game(
     id: int,
     db_repo: PrivateDBRepository = Depends(get_db_repository(PrivateDBRepository)),
     user: UserInDB = Depends(get_user_from_token),
-    is_superuser = Depends(is_superuser),
     is_verified = Depends(is_verified),
     ) -> None:
     if not user.is_superuser:
@@ -184,3 +183,31 @@ async def delete_private_game(
     return None
 
 
+# Subscription plans
+@router.delete("/grade/subscription/plans")
+async def delete_grade_subscription_plan(
+    id: int,
+    db_repo: PrivateDBRepository = Depends(get_db_repository(PrivateDBRepository)),
+    user: UserInDB = Depends(get_user_from_token),
+    is_verified = Depends(is_verified),
+    ) -> None:
+    if not user.is_superuser:
+        raise HTTPException(status_code=HTTP_403_FORBIDDEN, detail="Not superuser!")
+    if not is_verified:
+        raise HTTPException(status_code=HTTP_403_FORBIDDEN, detail="Email not verified!")
+
+    return await db_repo.delete_grade_subscription_plan(id=id)
+
+@router.delete("/subject/subscription/plans")
+async def delete_subject_subscription_plan(
+    id: int,
+    db_repo: PrivateDBRepository = Depends(get_db_repository(PrivateDBRepository)),
+    user: UserInDB = Depends(get_user_from_token),
+    is_verified = Depends(is_verified),
+    ) -> None:
+    if not user.is_superuser:
+        raise HTTPException(status_code=HTTP_403_FORBIDDEN, detail="Not superuser!")
+    if not is_verified:
+        raise HTTPException(status_code=HTTP_403_FORBIDDEN, detail="Email not verified!")
+
+    return await db_repo.delete_subject_subscription_plan(id=id)

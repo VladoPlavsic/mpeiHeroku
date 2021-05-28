@@ -20,13 +20,19 @@ from app.models.private import GameInDB
 from app.models.private import BookInDB
 from app.models.private import PresentationInDB
 from app.models.private import PresentationMediaInDB
-from app.models.private import PresentationMasterInDB
-
-from app.models.private import MaterialBulk
 
 from app.models.private import StructureAllModel
 from app.models.private import MaterialAllModel
 from app.models.private import AudioImagesAllModel
+
+# offers
+from app.models.private import AvailableGradeSubscriptionOffers
+from app.models.private import AvailableSubjectSubscriptionOffers
+# plans
+from app.models.private import AvailableGradeSubscriptionPlans
+from app.models.private import AvailableSubjectSubscriptionPlans
+
+
 
 import logging
 
@@ -246,6 +252,32 @@ class PrivateDBSelectRepository(BaseDBRepository):
         records = await self.__select_many(query=select_all_user_available_subjects_query(user_id=user_id))
 
         return [UserAvailableSubjects(**record) for record in records]
+
+
+    # subscriptions
+    # plans
+    async def select_all_grade_subscription_plans(self) -> List[AvailableGradeSubscriptionPlans]:
+        records = await self.__select_many(query=get_available_grade_plans_query())
+
+        return [AvailableGradeSubscriptionPlans(**record) for record in records]
+
+    async def select_all_subject_subscription_plans(self) -> List[AvailableSubjectSubscriptionPlans]:
+        records = await self.__select_many(query=get_available_subject_plans_query())
+
+        return [AvailableGradeSubscriptionPlans(**record) for record in records]
+
+
+    # offers
+    async def select_all_grade_subscription_offers(self) -> List[AvailableGradeSubscriptionOffers]:
+        records = await self.__select_many(query=get_available_grade_offers_query())
+        
+        return [AvailableGradeSubscriptionOffers(**record) for record in records]
+        
+    async def select_all_subject_subscription_offers(self) -> List[AvailableSubjectSubscriptionOffers]:
+        records = await self.__select_many(query=get_available_subject_offers_query())
+
+        return [AvailableSubjectSubscriptionOffers(**record) for record in records]
+
 
 
     async def __select_many(self, *, query):

@@ -56,3 +56,9 @@ async def get_faq(
     response = await public_repo.select_faq(limit=limit, offset=offset)
 
     return FaqAllResponse(faq=response)
+
+
+# TEMPORARY FOR WAKING SERVER
+@router.get("/wake/")
+async def wake_server() -> None:
+    return None

@@ -38,8 +38,15 @@ class PrivateDBDeleteRepository(BaseDBRepository):
         return await self.__delete(query=delete_video_query(id=id), none_response_raise=False)
 
     async def delete_game(self, *, id) -> None:
-        await self.db.fetch_one(query=delete_game_query(id=id))
+        await self.__delete(query=delete_game_query(id=id), none_response_raise=False)
 
+    # subscription plans
+    async def delete_grade_subscription_plan(self, *, id) -> None:
+        await self.__delete(query=delete_available_grade_plans_query(id=id), none_response_raise=False)
+
+
+    async def delete_subject_subscription_plan(self, *, id) -> None:
+        await self.__delete(query=delete_available_subject_plans_query(id=id), none_response_raise=False)
 
     async def __delete(self, *, query, none_response_raise=True):
         """

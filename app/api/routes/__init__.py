@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Request, Body
+from fastapi import APIRouter
 
 # private routes
 from app.api.routes.private.post import router as private_post_router
@@ -12,6 +12,8 @@ from app.api.routes.public.put import router as public_put_router
 from app.api.routes.public.delete import router as public_delete_router
 # user routes
 from app.api.routes.users.post import router as users_post_router
+from app.api.routes.users.get import router as users_get_router
+from app.api.routes.users.put import router as users_put_router
 
 # about routes
 from app.api.routes.about.post import router as about_post_router
@@ -42,6 +44,9 @@ router.include_router(public_delete_router, prefix='/public', tags=["public"])
 
 # users routes
 router.include_router(users_post_router, prefix='/users', tags=['users'])
+router.include_router(users_get_router, prefix='/users', tags=['users'])
+router.include_router(users_put_router, prefix='/users', tags=['users'])
+
 
 # about routes
 router.include_router(about_post_router, prefix='/about', tags=['about'])
@@ -56,24 +61,3 @@ router.include_router(news_put_router, prefix="/news", tags=['news'])
 router.include_router(news_delete_router, prefix="/news", tags=['news'])
 
 
-
-# test route for YOMONEEY REMOVE!!!
-
-
-import logging
-
-logger = logging.getLogger(__name__)
-from starlette.status import HTTP_200_OK
-
-# YooKassa Confirmation Notifications
-@router.post("/users/subscriptions/notifications/", status_code=HTTP_200_OK)
-async def subscription_notification_hnd(
-    notification_object: Request = Body(...),
-    ) -> None:
-
-  
-    logger.warn("--- ACCEPTED CONFIRMATION FROM YOOMONEY ---")
-    logger.warn(notification_object.json())
-    logger.warn("--- ACCEPTED CONFIRMATION FROM YOOMONEY ---")
-
-    return None

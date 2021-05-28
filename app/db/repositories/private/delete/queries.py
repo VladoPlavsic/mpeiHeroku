@@ -34,3 +34,13 @@ def delete_video_query(id) -> str:
 def delete_game_query(id) -> str:
     return \
         f"SELECT private.delete_game_by_id({id})"
+
+# Subscription plans
+def delete_available_grade_plans_query(id: int) -> str:
+    return \
+        f"SELECT subscriptions.delete_available_grade_plans({id})"
+
+
+def delete_available_subject_plans_query(id: int) -> str:
+    return \
+        f"SELECT subscriptions.delete_available_subject_plans({id})"

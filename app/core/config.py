@@ -53,3 +53,10 @@ DATABASE_URL = config(
 
 # SITE URL
 SITE_URL = config("SITE_URL", cast=str, default="http://localhost:8080")
+
+# YOOMONEY
+YOOMONEY_ACCOUNT_ID = config("YOOMONEY_ACCOUNT_ID", cast=str)
+YOOMONEY_SECRET_KEY = config("YOOMONEY_SECRET_KEY", cast=str)
+
+# SERVER INFO
+RESFUL_SERVER_URL = config("RESFUL_SERVER_URL", cast=str)

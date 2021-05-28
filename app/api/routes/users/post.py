@@ -1,11 +1,11 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Request
 from fastapi import Body, BackgroundTasks, Depends, HTTPException
 from fastapi.security import OAuth2PasswordRequestForm
 
 from starlette.status import HTTP_200_OK
 
+
 from app.models.email import QuestionEmail
-from app.models.email import EmailResponse
 
 from app.api.dependencies.email import send_message, create_confirm_code_msg, create_confirm_link
 
@@ -17,24 +17,13 @@ from app.api.dependencies.auth import generate_confirmation_code
 from app.models.token import AccessToken
 from app.services import auth_service
 
-from app.api.dependencies.auth import get_user_from_token, is_superuser
-
 # request models
 from app.models.user import UserCreate
 
 # response models
-from app.models.user import PublicUserInDB, UserInDB
+from app.models.user import PublicUserInDB
 
 router = APIRouter()
-
-
-@router.get("/admin", name="users:check-if-admin", status_code=HTTP_200_OK)
-async def get_private_grades(
-    user: UserInDB = Depends(get_user_from_token),
-    is_superuser = Depends(is_superuser),
-    ):
-
-    return is_superuser
 
 @router.post("/email/contact")
 async def send_user_question_via_email(
@@ -64,26 +53,6 @@ async def register_new_user(
 
     return PublicUserInDB(**registred.dict())
 
-@router.get("/email/confirm")
-async def confirm_email(
-    user: UserInDB = Depends(get_user_from_token),
-    db_repo: UsersDBRepository = Depends(get_db_repository(UsersDBRepository)),
-    ) -> AccessToken:
-    if not user.email_verified:
-        await db_repo.verify_email(user_id=user.id)
-
-    if not user.is_active:
-        return None
-
-    access_token = AccessToken(
-        access_token=auth_service.create_access_token_for_user(user=user), token_type='bearer'
-    )
-
-    await db_repo.set_jwt_token(user_id=user.id, token=access_token.access_token)
-
-    user.jwt = access_token.access_token
-
-    return PublicUserInDB(**user.dict(), access_token=access_token)
 
 @router.post("/login/code", status_code=HTTP_200_OK)
 async def user_login_with_email_and_password_send_code(
@@ -141,39 +110,39 @@ async def user_login_with_email_and_password(
 
     return PublicUserInDB(**user.dict(), access_token=access_token)
 
-
-# buying grades/subjects
-@router.post("/buy/grade")
-async def user_buy_grade_access(
-    grade_id: int = Body(..., embed=True),
-    user = Depends(get_user_from_token),
+@router.post("/subscriptions/check/")
+async def user_check_expired_subscriptions(
+    background_task: BackgroundTasks,
     user_repo: UsersDBRepository = Depends(get_db_repository(UsersDBRepository)),
     ) -> None:
 
-    # remove default days
-    await user_repo.add_grade_to_user(user_id=user.id, grade_id=grade_id, days=200)
-
+    background_task.add_task(user_repo.check_expired_subscriptions)
     return None
 
-@router.post("/buy/subject")
-async def user_buy_subject_access(
-    subject_id: int = Body(..., embed=True),
-    user = Depends(get_user_from_token),
+# YooKassa Confirmation Notifications
+@router.post("/subscriptions/notifications/", status_code=HTTP_200_OK)
+async def subscription_notification_hnd(
+    notification_object: Request = Body(...),
     user_repo: UsersDBRepository = Depends(get_db_repository(UsersDBRepository)),
     ) -> None:
 
-    # remove default days
-    await user_repo.add_subject_to_user(user_id=user.id, subject_id=subject_id, days=200)
+    print(notification_object)
+    notification = await notification_object.json()
+    print(notification)
+
+    if notification["event"] == "payment.succeeded":
+        payment_object = await user_repo.get_payment_request(payment_id=notification["object"]["id"])
+        product = await user_repo.get_offer_details(level=int(payment_object.level), offer_fk=payment_object.offer_fk)
+        # add product
+        await user_repo.add_product_to_user(user_id=payment_object.user_fk, product_id=product.product_fk, subscription_fk=payment_object.offer_fk, level=int(payment_object.level))
+        await user_repo.delete_pending_subscription(payment_id=notification["object"]["id"])
+   
+    elif notification["event"] == "payment.canceled":
+        await user_repo.delete_pending_subscription(payment_id=notification["object"]["id"])
 
     return None
 
-# get
-@router.get("/user")
-async def user_get_user(
-    user = Depends(get_user_from_token),
-    user_repo: UsersDBRepository = Depends(get_db_repository(UsersDBRepository)),
-) -> PublicUserInDB:
-
-    response = await user_repo.get_user_by_email(email=user.email)
-
-    return PublicUserInDB(**user.dict(), access_token=AccessToken(access_token=user.jwt, token_type="bearer"))
+# TODO:
+# ###
+# 1. Create a route for notifications
+# 4. Delete realy old pending statuses

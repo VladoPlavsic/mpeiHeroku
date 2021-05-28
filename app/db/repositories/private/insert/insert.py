@@ -48,18 +48,6 @@ class PrivateDBInsertRepository(BaseDBRepository):
     # ###
     # insert material
     # ###
-    async def check_timestamp_is_set(self) -> bool:
-        response = await self.db.fetch_one(query=check_timestamp_is_set_query())
-        if response['count'] == 0:
-            await self.__set_timestamp_to_now()
-
-    async def __set_timestamp_to_now(self) -> None:
-        '''
-        Only to be used in case if there is not timestamp in the table. So first do check to see if there is one, and if not call this function.
-        I can't stress this enough!
-        '''
-        await self.db.fetch_one(query=set_timestamp_to_now_query())
-
     async def insert_theory(self, *, presentation: PresentationCreateModel, images: List[PresentationMediaCreate], audio: List[PresentationMediaCreate]) -> PresentationInDB:
         return await self.__insert_presentation(presentation=presentation, images=images, audio=audio, table='theory')
 
@@ -116,9 +104,6 @@ class PrivateDBInsertRepository(BaseDBRepository):
             logger.error(f"--- ERROR RAISED TRYING TO INSERT {table} ---")
             raise HTTPException(status_code=400, detail=f"Unhandled error raised trying to insert {table}. Exited with {e}")
             
-        # check if timestamp is set, set if not
-        await self.check_timestamp_is_set()
-
         return PresentationInDB(
             id=inserted_presentation['id'], 
             name_ru=inserted_presentation['name_ru'], 
@@ -159,9 +144,6 @@ class PrivateDBInsertRepository(BaseDBRepository):
             logger.error(f"--- ERROR RAISED TRYING TO INSERT {content_type} ---")
             raise HTTPException(status_code=400, detail=f"Unhandled error raised trying to insert {content_type}. Exited with {e}")
 
-        # check if timestamp is set, set if not
-        await self.check_timestamp_is_set()
-
         return BookInDB(**inserted) if content_type == "book" else VideoInDB(**inserted)
 
     async def insert_game(self, *, game: GameCreateModel) -> GameInDB:
@@ -180,9 +162,6 @@ class PrivateDBInsertRepository(BaseDBRepository):
             logger.error(e)
             logger.error(f"--- ERROR RAISED TRYING TO INSERT GAME ---")
             raise HTTPException(status_code=400, detail=f"Unhandled error raised trying to insert book. Exited with {e}")
-
-        # check if timestamp is set, set if not
-        await self.check_timestamp_is_set()
 
         return GameInDB(**inserted)
 
@@ -238,6 +217,16 @@ class PrivateDBInsertRepository(BaseDBRepository):
         response = await self.__insert_structure(query=query)
         return LectureInDB(**response)
 
+        
+    # Insert available subscription plans
+    # grades
+    async def insert_available_grade_plan(self, *, name: str,  price: float, month_count: int) -> None:
+        await self.__insert_structure(query=insert_available_grade_plans_query(name=name, price=price, month_count=month_count))
+
+    # subjects
+    async def insert_available_subject_plan(self, *, name: str, price: float, month_count: int) -> None:
+        await self.__insert_structure(query=insert_available_subject_plans_query(name=name, price=price, month_count=month_count))
+
     async def __insert_structure(self, *, query) -> Record:
         try:
             response = await self.db.fetch_one(query=query)
@@ -252,9 +241,4 @@ class PrivateDBInsertRepository(BaseDBRepository):
             logger.error(f"--- ERROR RAISED TRYING TO INSERT ONE OF STRUCTURAL QUERIES ---")
             raise HTTPException(status_code=400, detail=f"Unhandled error raised trying to insert one of structural queries. Exited with {e}")
         
-        # check if timestamp is set, set if not
-        await self.check_timestamp_is_set()
-
         return response
-        
-        

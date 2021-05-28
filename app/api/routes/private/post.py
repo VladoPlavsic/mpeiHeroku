@@ -14,10 +14,10 @@ from app.api.dependencies.auth import get_user_from_token, is_superuser, is_veri
 # Request models
 # ###
 # material
-from app.models.private import PresentationCreateModel, PresentationMediaCreate
+from app.models.private import PresentationCreateModel
 from app.models.private import BookPostModel, BookCreateModel
 from app.models.private import VideoPostModelYT, VideoPostModelCDN, VideoCreateModel
-from app.models.private import GamePostModel, GameCreateModel
+from app.models.private import GamePostModel
 # structure
 from app.models.private import GradePostModel, GradeCreateModel
 from app.models.private import SubejctPostModel, SubjectCreateModel
@@ -37,6 +37,9 @@ from app.models.private import GradeInDB
 from app.models.private import SubjectInDB
 from app.models.private import BranchInDB
 from app.models.private import LectureInDB
+# subscriptions
+from app.models.private import CreateGradeSubscriptionPlan
+from app.models.private import CreateSubjectSubscriptionPlan
 
 from app.models.user import UserInDB
 
@@ -50,7 +53,6 @@ async def create_private_practice(
     presentation: PresentationCreateModel = Body(...),
     db_repo: PrivateDBRepository = Depends(get_db_repository(PrivateDBRepository)),
     cdn_repo: PrivateYandexCDNRepository = Depends(get_cdn_repository(PrivateYandexCDNRepository)),
-    user: UserInDB = Depends(get_user_from_token),
     is_superuser = Depends(is_superuser),
     is_verified = Depends(is_verified),
     ) -> PresentationInDB:
@@ -72,7 +74,6 @@ async def create_private_theory(
     db_repo: PrivateDBRepository = Depends(get_db_repository(PrivateDBRepository)),
     cdn_repo: PrivateYandexCDNRepository = Depends(get_cdn_repository(PrivateYandexCDNRepository)),
     user: UserInDB = Depends(get_user_from_token),
-    is_superuser = Depends(is_superuser),
     is_verified = Depends(is_verified),
     ) -> PresentationInDB:
     if not user.is_superuser:
@@ -93,7 +94,6 @@ async def create_private_book(
     db_repo: PrivateDBRepository = Depends(get_db_repository(PrivateDBRepository)),
     cdn_repo: PrivateYandexCDNRepository = Depends(get_cdn_repository(PrivateYandexCDNRepository)),
     user: UserInDB = Depends(get_user_from_token),
-    is_superuser = Depends(is_superuser),
     is_verified = Depends(is_verified),
     ) -> BookInDB:
     if not user.is_superuser:
@@ -112,7 +112,6 @@ async def create_private_video(
     video: VideoPostModelYT = Body(...),
     db_repo: PrivateDBRepository = Depends(get_db_repository(PrivateDBRepository)),
     user: UserInDB = Depends(get_user_from_token),
-    is_superuser = Depends(is_superuser),
     is_verified = Depends(is_verified),
     ) -> VideoInDB:
     if not user.is_superuser:
@@ -131,7 +130,6 @@ async def create_private_video(
     db_repo: PrivateDBRepository = Depends(get_db_repository(PrivateDBRepository)),
     cdn_repo: PrivateYandexCDNRepository = Depends(get_cdn_repository(PrivateYandexCDNRepository)),
     user: UserInDB = Depends(get_user_from_token),
-    is_superuser = Depends(is_superuser),
     is_verified = Depends(is_verified),
     ) -> VideoInDB:
     if not user.is_superuser:
@@ -150,7 +148,6 @@ async def create_private_game(
     game: GamePostModel = Body(...),
     db_repo: PrivateDBRepository = Depends(get_db_repository(PrivateDBRepository)),
     user: UserInDB = Depends(get_user_from_token),
-    is_superuser = Depends(is_superuser),
     is_verified = Depends(is_verified),
     ) -> GameInDB:
     if not user.is_superuser:
@@ -171,7 +168,6 @@ async def create_private_grade(
     db_repo: PrivateDBRepository = Depends(get_db_repository(PrivateDBRepository)),
     cdn_repo: PrivateYandexCDNRepository = Depends(get_cdn_repository(PrivateYandexCDNRepository)),
     user: UserInDB = Depends(get_user_from_token),
-    is_superuser = Depends(is_superuser),
     is_verified = Depends(is_verified),
     ) -> GradeInDB:
     if not user.is_superuser:
@@ -191,7 +187,6 @@ async def create_private_subject(
     db_repo: PrivateDBRepository = Depends(get_db_repository(PrivateDBRepository)),
     cdn_repo: PrivateYandexCDNRepository = Depends(get_cdn_repository(PrivateYandexCDNRepository)),
     user: UserInDB = Depends(get_user_from_token),
-    is_superuser = Depends(is_superuser),
     is_verified = Depends(is_verified),
     ) -> SubjectInDB:
     if not user.is_superuser:
@@ -210,7 +205,6 @@ async def create_private_branch(
     db_repo: PrivateDBRepository = Depends(get_db_repository(PrivateDBRepository)),
     cdn_repo: PrivateYandexCDNRepository = Depends(get_cdn_repository(PrivateYandexCDNRepository)),
     user: UserInDB = Depends(get_user_from_token),
-    is_superuser = Depends(is_superuser),
     is_verified = Depends(is_verified),
     ) -> BranchInDB:
     if not user.is_superuser:
@@ -230,7 +224,6 @@ async def create_private_lecture(
     db_repo: PrivateDBRepository = Depends(get_db_repository(PrivateDBRepository)),
     cdn_repo: PrivateYandexCDNRepository = Depends(get_cdn_repository(PrivateYandexCDNRepository)),
     user: UserInDB = Depends(get_user_from_token),
-    is_superuser = Depends(is_superuser),
     is_verified = Depends(is_verified),
     ) -> LectureInDB:
     if not user.is_superuser:
@@ -243,3 +236,31 @@ async def create_private_lecture(
 
     return response
 
+# Subscription plans
+@router.post("/grade/subscription/plans")
+async def create_grade_subscription_plan(
+    grade_plan: CreateGradeSubscriptionPlan = Body(...),
+    db_repo: PrivateDBRepository = Depends(get_db_repository(PrivateDBRepository)),
+    user: UserInDB = Depends(get_user_from_token),
+    is_verified = Depends(is_verified),
+    ) -> None:
+    if not user.is_superuser:
+        raise HTTPException(status_code=HTTP_403_FORBIDDEN, detail="Not superuser!")
+    if not is_verified:
+        raise HTTPException(status_code=HTTP_403_FORBIDDEN, detail="Email not verified!")
+
+    return await db_repo.insert_available_grade_plan(name=grade_plan.name, price=grade_plan.price, month_count=grade_plan.month_count)
+
+@router.post("/subject/subscription/plans")
+async def create_grade_subscription_plan(
+    subject_plan: CreateSubjectSubscriptionPlan = Body(...),
+    db_repo: PrivateDBRepository = Depends(get_db_repository(PrivateDBRepository)),
+    user: UserInDB = Depends(get_user_from_token),
+    is_verified = Depends(is_verified),
+    ) -> None:
+    if not user.is_superuser:
+        raise HTTPException(status_code=HTTP_403_FORBIDDEN, detail="Not superuser!")
+    if not is_verified:
+        raise HTTPException(status_code=HTTP_403_FORBIDDEN, detail="Email not verified!")
+    
+    return await db_repo.insert_available_subject_plan(name=subject_plan.name, price=subject_plan.price, month_count=subject_plan.month_count)

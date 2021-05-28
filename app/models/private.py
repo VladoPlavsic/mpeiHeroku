@@ -282,3 +282,44 @@ class UpdateBookModel(UpdateBaseModel):
 
 class UpdatePresentationModel(UpdateBaseModel):
     description: Optional[str]
+
+
+# ###
+# Subscriptions
+# ###
+class SubscriptionsBase(DBCoreModel):
+    name: str
+    price: float
+    month_count: int
+
+class OfferDetails(DBCoreModel):
+    id: int
+    product_fk: int
+    subscription_fk: int
+
+class CreateGradeSubscriptionPlan(SubscriptionsBase):
+    pass
+
+class CreateSubjectSubscriptionPlan(SubscriptionsBase):
+    pass
+
+class AvailableGradeSubscriptionPlans(SubscriptionsBase):
+    id: int
+
+class AvailableSubjectSubscriptionPlans(SubscriptionsBase):
+    id: int
+
+class AvailableGradeSubscriptionOffers(SubscriptionsBase):
+    id: int
+    name_en: str
+
+class AvailableSubjectSubscriptionOffers(SubscriptionsBase):
+    id: int
+    name_en: str
+
+
+class PaymentRequestDetails(DBCoreModel):
+    user_fk: int
+    offer_fk: int
+    payment_id: str
+    level: bool

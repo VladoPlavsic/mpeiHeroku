@@ -74,113 +74,8 @@ def create_user_functions() -> None:
             FROM users.users WHERE users.users.id = inserted_id);
     END $$ LANGUAGE plpgsql;
     """)
-    # add grade to user
-    op.execute("""
-    CREATE OR REPLACE FUNCTION users.add_grade_to_user_function(user_id int, grade_id int, days int, i_for_life boolean default 'f')
-    RETURNS VOID
-    AS $$
-    BEGIN
-        INSERT INTO users.user_grades(user_fk, grade_fk, days_left, for_life) VALUES(user_id, grade_id, days, i_for_life);
-    END $$ LANGUAGE plpgsql;
-    """)
-    # add subject to user
-    op.execute("""
-    CREATE OR REPLACE FUNCTION users.add_subject_to_user_function(user_id int, subject_id int, days int, i_for_life boolean default 'f')
-    RETURNS VOID
-    AS $$
-    BEGIN 
-        INSERT INTO users.user_subjects(user_fk, subject_fk, days_left, for_life) VALUES (user_id, subject_id, days, i_for_life);
-    END $$ LANGUAGE plpgsql;
-    """)
 
-    # remove grade from user
-    op.execute("""
-    CREATE OR REPLACE FUNCTION users.remove_grade_from_user_function(user_id int, grade_id int)
-    RETURNS VOID
-    AS $$ 
-    BEGIN 
-        DELETE FROM users.user_grades WHERE users.user_grades.user_fk = user_id AND users.user_grades.grade_fk = grade_id;
-    END $$ LANGUAGE plpgsql;
-    """)
-    # remove subject from user
-    op.execute("""
-    CREATE OR REPLACE FUNCTION users.remove_subject_from_user_function(user_id int, subject_id int)
-    RETURNS VOID
-    AS $$
-    BEGIN
-        DELETE FROM users.user_subjects WHERE users.user_subjects.user_fk = user_id AND users.user_subjects.subject_fk = subject_id;
-    END $$ LANGUAGE plpgsql;
-    """)
-
-    # prolong grade subscription duration
-    op.execute("""
-    CREATE OR REPLACE FUNCTION users.prolong_grade_subscription(user_id int, grade_id int, days int)
-    RETURNS VOID
-    AS $$
-    BEGIN 
-        UPDATE users.user_grades SET
-            days_left = users.user_grades.days_left + days,
-            updated_at = now() 
-        WHERE users.user_grades.user_fk = user_id AND users.user_grades.grade_fk = grade_id;
-    END $$ LANGUAGE plpgsql;
-    """)
-    # prolong subject subscription duration
-    op.execute("""
-    CREATE OR REPLACE FUNCTION users.prolong_subject_subscription(user_id int, subject_id int, days int)
-    RETURNS VOID
-    AS $$ 
-    BEGIN 
-        UPDATE users.user_subjects SET
-            days_left = users.user_subjects.days_left + days,
-            updated_at = now()
-        WHERE users.user_subjects.user_fk = user_id AND users.user_subjects.subject_fk = subject_id;
-    END $$ LANGUAGE plpgsql;
-    """)
-
-    # select all user available grades
-    op.execute("""
-    CREATE OR REPLACE FUNCTION users.select_all_user_available_grades(user_id int)
-    RETURNS TABLE (grade_id int, created_at timestamp WITH TIME ZONE, updated_at timestamp WITH TIME ZONE)
-    AS $$
-    BEGIN
-        RETURN QUERY (SELECT users.user_grades.grade_fk, users.user_grades.created_at, users.user_grades.updated_at FROM users.user_grades WHERE users.user_grades.user_fk = user_id);
-    END $$ LANGUAGE plpgsql;
-    """)
-    # select all user available subjects
-    op.execute("""
-    CREATE OR REPLACE FUNCTION users.select_all_user_available_subjects(user_id int)
-    RETURNS TABLE (subject_id int, created_at timestamp WITH TIME ZONE, updated_at timestamp WITH TIME ZONE)
-    AS $$
-    BEGIN 
-        RETURN QUERY (SELECT users.user_subjects.subject_fk, users.user_subjects.created_at, users.user_subjects.updated_at FROM users.user_subjects WHERE users.user_subjects.user_fk = user_id);
-    END $$ LANGUAGE plpgsql;
-    """)
-
-    # decrement days left
-    op.execute("""
-    CREATE OR REPLACE FUNCTION users.decrement_days_left_count()
-    RETURNS VOID
-    AS $$
-    BEGIN
-        UPDATE users.user_grades SET
-            days_left = days_left - 1 WHERE users.user_grades.for_life = 'f';
-        UPDATE users.user_subjects SET
-            days_left = days_left - 1 WHERE users.user_subjects.for_life = 'f';
-        SELECT delete_expired_subscriptions();
-    END $$ LANGUAGE plpgsql;
-    """)
-
-    # delete expired subscriptions grades
-    op.execute("""
-    CREATE OR REPLACE FUNCTION users.delete_expired_subscriptions()
-    RETURNS VOID
-    AS $$
-    BEGIN 
-        DELETE FROM users.user_grades WHERE days_left < 0;
-        DELETE FROM users.user_subjects WHERE days_left < 0;
-    END $$ LANGUAGE plpgsql;
-    """)
-
+   
     # get user by email
     op.execute("""
     CREATE OR REPLACE FUNCTION users.get_user_by_email(i_email text)
@@ -251,16 +146,10 @@ def create_user_authentication_functions() -> None:
 def delete_users_functions() -> None:
     functions = [
         'create_user_function',
-        'add_grade_to_user_function',
-        'add_subject_to_user_function',
         'remove_grade_from_user_function',
         'remove_subject_from_user_function',
-        'prolong_grade_subscription',
-        'prolong_subject_subscription',
         'select_all_user_available_grades',
         'select_all_user_available_subjects',
-        'decrement_days_left_count',
-        'delete_expired_subscriptions',
         'get_user_by_email',
         'set_confirmation_code',
         'set_jwt_token',
