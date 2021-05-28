@@ -46,8 +46,6 @@ def get_application():
         logger.warn(f"sending GET request to {config.RESFUL_SERVER_URL}/api/public/wake/")
         requests.get(f"{config.RESFUL_SERVER_URL}/api/public/wake/")
 
-    
-    
 
     app.include_router(api_router, prefix="/api")
 
