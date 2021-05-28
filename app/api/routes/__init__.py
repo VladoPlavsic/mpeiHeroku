@@ -59,19 +59,22 @@ router.include_router(news_delete_router, prefix="/news", tags=['news'])
 
 # test route for YOMONEEY REMOVE!!!
 
+from yookassa.domain.notification import WebhookNotification
 
 import logging
 
 logger = logging.getLogger(__name__)
 
-# Cron job for 
-@router.get("/cron")
-def cron():
-    logger.warn("---- ACCEPTED CRON -----")
+# YooKassa Confirmation Notifications
+@router.post("users/subscriptions/notifications/", status_code=HTTP_200_OK)
+async def subscription_notification_hnd(
+    notification_object: WebhookNotification = Body(...),
+    ) -> None:
 
-@router.post("/com")
-def test(data):
-    logger.warn("------ ACCEPTED THIS -----")
-    logger.warn(data)
-    logger.warn("------ ACCEPTED THIS -----")
+    payment = notification_object.object
+    
+    logger.warn("--- ACCEPTED CONFIRMATION FROM YOOMONEY ---")
+    logger.warn(payment)
+    logger.warn("--- ACCEPTED CONFIRMATION FROM YOOMONEY ---")
+
     return None
