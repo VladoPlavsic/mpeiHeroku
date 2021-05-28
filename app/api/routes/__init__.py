@@ -69,7 +69,6 @@ from starlette.status import HTTP_200_OK
 @router.post("/users/subscriptions/notifications/", status_code=HTTP_200_OK)
 async def subscription_notification_hnd(
     notification_object: Request = Body(...),
-    user_repo: UsersDBRepository = Depends(get_db_repository(UsersDBRepository)),
     ) -> None:
 
   
