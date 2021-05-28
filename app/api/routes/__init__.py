@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, Request, Body
 
 # private routes
 from app.api.routes.private.post import router as private_post_router
