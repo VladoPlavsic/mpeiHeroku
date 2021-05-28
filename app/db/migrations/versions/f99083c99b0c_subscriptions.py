@@ -149,7 +149,7 @@ def create_triggers() -> None:
         _row RECORD;
     BEGIN
         FOR _row IN SELECT id FROM private.subject LOOP
-            INSERT INTO subscriptions.subject_offers (grade_fk, subscription_fk) VALUES (_row.id, NEW.id);
+            INSERT INTO subscriptions.subject_offers (subject_fk, subscription_fk) VALUES (_row.id, NEW.id);
         END LOOP;
     RETURN NEW;
     END $$ LANGUAGE plpgsql;
