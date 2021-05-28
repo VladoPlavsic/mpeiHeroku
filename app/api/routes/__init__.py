@@ -68,10 +68,9 @@ from starlette.status import HTTP_200_OK
 
 # YooKassa Confirmation Notifications
 @router.post("/users/subscriptions/notifications/", status_code=HTTP_200_OK)
-async def subscription_notification_hnd(
+def subscription_notification_hnd(
     notification_object: Request,
     ) -> None:
-
     
     logger.warn("--- ACCEPTED CONFIRMATION FROM YOOMONEY ---")
     logger.warn(notification_object.json())
