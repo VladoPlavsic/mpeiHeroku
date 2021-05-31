@@ -311,10 +311,13 @@ class AvailableSubjectSubscriptionPlans(SubscriptionsBase):
 
 class AvailableGradeSubscriptionOffers(SubscriptionsBase):
     id: int
+    grade_id: int
     name_en: str
 
 class AvailableSubjectSubscriptionOffers(SubscriptionsBase):
     id: int
+    subject_id: int
+    grade_id: int
     name_en: str
 
 

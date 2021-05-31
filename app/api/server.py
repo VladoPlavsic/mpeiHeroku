@@ -41,11 +41,13 @@ def get_application():
 
     # Keep server alive
     @app.on_event("startup")
-    @repeat_every(seconds=60 * 25) # update every 25 minutes (Keep server alive, remove on paid version)
+    @repeat_every(seconds=60 * 50) # update every 50 minutes (Keep server alive, remove on paid version)
     def keep_server_alive() -> None:
         logger.warn(f"sending GET request to {config.RESFUL_SERVER_URL}/api/public/wake/")
         requests.get(f"{config.RESFUL_SERVER_URL}/api/public/wake/")
 
+    
+    
 
     app.include_router(api_router, prefix="/api")
 

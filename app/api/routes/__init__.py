@@ -59,3 +59,5 @@ router.include_router(news_post_router, prefix="/news", tags=['news'])
 router.include_router(news_get_router, prefix="/news", tags=['news'])
 router.include_router(news_put_router, prefix="/news", tags=['news'])
 router.include_router(news_delete_router, prefix="/news", tags=['news'])
+
+

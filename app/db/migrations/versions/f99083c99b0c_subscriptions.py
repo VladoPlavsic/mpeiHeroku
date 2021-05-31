@@ -262,6 +262,7 @@ def create_subscription_functions() -> None:
     CREATE OR REPLACE FUNCTION subscriptions.get_available_grade_offers()
     RETURNS TABLE(
         id INT,
+        grade_id INT,
         name_en VARCHAR(20),
         name VARCHAR(50),
         price NUMERIC(20, 2),
@@ -269,7 +270,7 @@ def create_subscription_functions() -> None:
     )
     AS $$
     BEGIN
-        RETURN QUERY (SELECT go.id, gd.name_en, su.name, su.price, su.month_count FROM subscriptions.grade_offers AS go 
+        RETURN QUERY (SELECT go.id, gd.id, gd.name_en, su.name, su.price, su.month_count FROM subscriptions.grade_offers AS go 
         INNER JOIN private.grade AS gd ON go.grade_fk = gd.id INNER JOIN subscriptions.grade_subscription_plans AS su ON go.subscription_fk = su.id);
     END $$ LANGUAGE plpgsql;
     """)
@@ -278,6 +279,8 @@ def create_subscription_functions() -> None:
     CREATE OR REPLACE FUNCTION subscriptions.get_available_subject_offers()
     RETURNS TABLE(
         id INT,
+        subject_id INT,
+        grade_id INT,
         name_en VARCHAR(20),
         name VARCHAR(50),
         price NUMERIC(20, 2),
@@ -285,7 +288,7 @@ def create_subscription_functions() -> None:
     )
     AS $$
     BEGIN
-        RETURN QUERY (SELECT so.id, sd.name_en, su.name, su.price, su.month_count FROM subscriptions.subject_offers AS so 
+        RETURN QUERY (SELECT so.id, sd.id, sd.fk, sd.name_en, su.name, su.price, su.month_count FROM subscriptions.subject_offers AS so 
         INNER JOIN private.subject AS sd ON so.subject_fk = sd.id INNER JOIN subscriptions.subject_subscription_plans AS su ON so.subscription_fk = su.id);
     END $$ LANGUAGE plpgsql;
     """)

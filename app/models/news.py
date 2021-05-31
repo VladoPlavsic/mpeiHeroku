@@ -28,6 +28,10 @@ class NewsCreateModel(NewsCoreModel):
     preview_image_url: str
     images: List[NewsImagesCreate]
 
+class NewsPreviewInDBModel(NewsCoreModel):
+    id: int
+    preview_image_url: str
+
 class NewsInDBModel(NewsCoreModel):
     id: int
     preview_image_url: str
@@ -35,7 +39,7 @@ class NewsInDBModel(NewsCoreModel):
 
 class NewsResponseModel(BaseModel):
     count: int 
-    news: List[NewsInDBModel]
+    news: List[NewsPreviewInDBModel]
 
 class NewsUpdateModel(BaseModel):
     id: int
@@ -46,7 +50,6 @@ class NewsUpdateModel(BaseModel):
     url: Optional[str]
     cloud_key: Optional[str]
     preview_image_url: Optional[str]
-
 
 class NewsImagesAllModel(BaseModel):
     cloud_key: str

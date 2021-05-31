@@ -73,7 +73,17 @@ def create_news_functions() -> None:
     AS $$
     BEGIN
         RETURN QUERY (SELECT * FROM news.news ORDER BY date DESC LIMIT i_limit OFFSET i_offset);
-    END $$ LANGUAGE plpgsql
+    END $$ LANGUAGE plpgsql;
+    """)
+
+    # select news by unique key (url + date)
+    op.execute("""
+    CREATE OR REPLACE FUNCTION news.select_news_by_unique_key(i_date text, i_url text)
+    RETURNS TABLE (id int, date text, title text, short_desc text, content text, url text, cloud_key text, preview_image_url text)
+    AS $$
+    BEGIN
+        RETURN QUERY (SELECT * FROM news.news WHERE news.news.url = i_url AND news.news.date = i_date);
+    END $$ LANGUAGE plpgsql;
     """)
     # select news slave
     op.execute("""
@@ -82,8 +92,11 @@ def create_news_functions() -> None:
     AS $$
     BEGIN
         RETURN QUERY (SELECT * FROM news.news_images WHERE news.news_images.fk = i_fk ORDER BY "order");
-    END $$ LANGUAGE plpgsql
+    END $$ LANGUAGE plpgsql;
     """)
+  
+
+
     # select all news master for updating
     op.execute("""
     CREATE OR REPLACE FUNCTION news.select_all_master_news()
@@ -193,6 +206,7 @@ def drop_functions() -> None:
         'update_news_images_sharing_links',
         'get_news_count',
         'update_news_metadata',
+        'select_news_by_unique_key',
     ]
 
     for function in functions:

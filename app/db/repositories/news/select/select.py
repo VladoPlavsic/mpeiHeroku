@@ -9,6 +9,7 @@ from app.models.news import NewsAllModel
 from app.models.news import NewsImagesAllModel
 from app.models.news import NewsImagesInDB
 from app.models.news import NewsInDBModel
+from app.models.news import NewsPreviewInDBModel
 
 import logging
 
@@ -39,14 +40,19 @@ class NewsDBSelectRepository(BaseDBRepository):
         images_records = await self.__select_many(query=select_images_for_news_query(fk=fk))
         return [NewsImagesInDB(**image) for image in images_records]
 
-    async def select_news(self, *, start: int, count: int) -> List[NewsInDBModel]:
-        news_records = await self.__select_many(query=select_news_query(start=start, count=count))
-        response = [NewsInDBModel(**news, images=[]) for news in news_records]
+    async def select_news_preview(self, *, start: int, count: int) -> List[NewsPreviewInDBModel]:
+        news_records = await self.__select_many(query=select_news_preview_query(start=start, count=count))
+        response = [NewsPreviewInDBModel(**news) for news in news_records]
 
-        for news in response:
-            news.images = await self.select_news_images(fk=news.id)
+        return response
 
-        print(response)
+    async def select_news(self, *, date: str, url: str) -> NewsInDBModel:
+        news = await self.__select_one(query=select_news_query(date=date, url=url))
+        if not news:
+            raise HTTPException(status_code=404, detail=f"News not found!")
+        response = NewsInDBModel(**news, images=[])
+
+        response.images = await self.select_news_images(fk=response.id)
 
         return response
 
