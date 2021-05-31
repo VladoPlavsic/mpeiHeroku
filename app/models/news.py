@@ -6,7 +6,6 @@ class NewsCoreModel(BaseModel):
     date: str
     title: str
     short_desc: str
-    content: str
     url: str
     cloud_key: str
 
@@ -22,9 +21,11 @@ class NewsImagesCreate(NewsImagesCore):
     pass
 
 class NewsPostModel(NewsCoreModel):
+    content: str
     folder: str
 
 class NewsCreateModel(NewsCoreModel):
+    content: str
     preview_image_url: str
     images: List[NewsImagesCreate]
 
@@ -34,6 +35,7 @@ class NewsPreviewInDBModel(NewsCoreModel):
 
 class NewsInDBModel(NewsCoreModel):
     id: int
+    content: str
     preview_image_url: str
     images: List[NewsImagesInDB]
 
