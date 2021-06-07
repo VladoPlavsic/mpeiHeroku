@@ -146,10 +146,6 @@ def create_user_authentication_functions() -> None:
 def delete_users_functions() -> None:
     functions = [
         'create_user_function',
-        'remove_grade_from_user_function',
-        'remove_subject_from_user_function',
-        'select_all_user_available_grades',
-        'select_all_user_available_subjects',
         'get_user_by_email',
         'set_confirmation_code',
         'set_jwt_token',

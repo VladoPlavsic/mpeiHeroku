@@ -311,14 +311,18 @@ class AvailableSubjectSubscriptionPlans(SubscriptionsBase):
 
 class AvailableGradeSubscriptionOffers(SubscriptionsBase):
     id: int
+    plan_id: int
     grade_id: int
     name_en: str
+    name_ru: str
 
 class AvailableSubjectSubscriptionOffers(SubscriptionsBase):
     id: int
+    plan_id: int
     subject_id: int
     grade_id: int
     name_en: str
+    name_ru: str
 
 
 class PaymentRequestDetails(DBCoreModel):

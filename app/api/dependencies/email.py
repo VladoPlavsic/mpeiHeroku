@@ -36,10 +36,8 @@ def send_message_int(service, user_id, message) -> EmailResponse:
       message = (service.users().messages().send(userId=user_id, body=message)
                   .execute())
       return EmailResponse(status_detail="Email sent successfuly!")
-    except error:
+    except Exception as e:
       raise HTTPException(status_code=500, detail="Unknown Error. Error raised trying to send message!")
-
-    return EmailResponse(status_detail=f"Message sent successfuly to user {message.to}")
 
 
 import os.path
