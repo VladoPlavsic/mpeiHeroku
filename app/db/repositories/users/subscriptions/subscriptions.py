@@ -23,7 +23,7 @@ class UserDBSubscriptionsRepository(BaseDBRepository):
 
     async def get_payment_request(self, *, payment_id: str) -> PaymentRequestDetails:
         response = await self.__execute(query=get_payment_request_query(payment_id=payment_id))
-        return PaymentRequestDetails(**response)
+        return PaymentRequestDetails(**response) if response else None
 
     # LEVEL: 0 - grade | 1 - subjects
     async def get_offer_details(self, *, level: int, offer_fk: int) -> OfferDetails:

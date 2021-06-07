@@ -122,6 +122,7 @@ async def user_check_expired_subscriptions(
 # YooKassa Confirmation Notifications
 @router.post("/subscriptions/notifications", status_code=HTTP_200_OK)
 async def subscription_notification_hnd(
+    background_tasks: BackgroundTasks,
     notification_object: Request = Body(...),
     user_repo: UsersDBRepository = Depends(get_db_repository(UsersDBRepository)),
     ) -> None:
@@ -132,6 +133,12 @@ async def subscription_notification_hnd(
 
     if notification["event"] == "payment.succeeded":
         payment_object = await user_repo.get_payment_request(payment_id=notification["object"]["id"])
+
+        # in case we didn't find any payment object for given id
+        if not payment_object:
+            background_tasks.add_task(send_message, subject="Payment confirmation failed. Required assistence.", message_text=f"There was error in confirming payment request. This might have happened because there was no recorded payment request with given payment ID when the notification was raised. Notification detail: {notification}")
+            return None
+            
         product = await user_repo.get_offer_details(level=int(payment_object.level), offer_fk=payment_object.offer_fk)
         # add product
         await user_repo.add_product_to_user(user_id=payment_object.user_fk, product_id=product.product_fk, subscription_fk=payment_object.offer_fk, level=int(payment_object.level))
