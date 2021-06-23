@@ -13,22 +13,22 @@ logger = logging.getLogger(__name__)
 # Structure queries
 # ###
 
-def insert_grades_query(name_en, name_ru, background_key, background) -> str:
+def insert_grades_query(name_en, name_ru, background_key, background, order_number) -> str:
     return \
-        f"SELECT (private.insert_grade('{name_en}', '{name_ru}', '{background_key}', '{background}')).*"
+        f"SELECT (private.insert_grade('{name_en}', '{name_ru}', '{background_key}', '{background}', {order_number})).*"
         
 
-def insert_subject_query(fk, name_en, name_ru, background_key, background) -> str:
+def insert_subject_query(fk, name_en, name_ru, background_key, background, order_number) -> str:
     return \
-        f"SELECT (private.insert_subject({fk}, '{name_en}', '{name_ru}', '{background_key}', '{background}')).*"
+        f"SELECT (private.insert_subject({fk}, '{name_en}', '{name_ru}', '{background_key}', '{background}', {order_number})).*"
 
-def insert_branch_query(fk, name_en, name_ru, background_key, background) -> str:
+def insert_branch_query(fk, name_en, name_ru, background_key, background, order_number) -> str:
     return \
-        f"SELECT (private.insert_branch({fk}, '{name_en}', '{name_ru}', '{background_key}', '{background}')).*"
+        f"SELECT (private.insert_branch({fk}, '{name_en}', '{name_ru}', '{background_key}', '{background}', {order_number})).*"
 
-def insert_lecture_query(fk, name_en, name_ru, description, background_key, background) -> str:
+def insert_lecture_query(fk, name_en, name_ru, description, background_key, background, order_number) -> str:
     return \
-        f"SELECT (private.insert_lecture({fk}, '{name_en}', '{name_ru}', '{description}', '{background_key}', '{background}')).*"
+        f"SELECT (private.insert_lecture({fk}, '{name_en}', '{name_ru}', '{description}', '{background_key}', '{background}', {order_number})).*"
 
 # ###
 # Material queries

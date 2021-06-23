@@ -50,7 +50,7 @@ async def update_sharing_links_function(
 
         private_books = await private_db_repo.select_all_books()
         if private_books:
-            updated = cdn_repo.get_sharing_links_from_objects(list_of_objects=lectures, type_='material')
+            updated = cdn_repo.get_sharing_links_from_objects(list_of_objects=private_books, type_='material')
             await private_db_repo.update_book_links(book=updated)
 
         private_theory_images = await private_db_repo.select_all_presentation_parts(presentation='theory', media_type='image')

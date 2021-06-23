@@ -174,7 +174,8 @@ class PrivateDBInsertRepository(BaseDBRepository):
             name_en=grade.name_en, 
             name_ru=grade.name_ru, 
             background_key=grade.background_key, 
-            background=grade.background
+            background=grade.background,
+            order_number=grade.order_number,
         )
 
         response = await self.__insert_structure(query=query)
@@ -186,7 +187,8 @@ class PrivateDBInsertRepository(BaseDBRepository):
             name_en=subject.name_en, 
             name_ru=subject.name_ru, 
             background_key=subject.background_key, 
-            background=subject.background
+            background=subject.background,
+            order_number=subject.order_number,
         )
 
         response = await self.__insert_structure(query=query)
@@ -197,8 +199,9 @@ class PrivateDBInsertRepository(BaseDBRepository):
             fk=branch.fk, 
             name_en=branch.name_en, 
             name_ru=branch.name_ru,
-            background_key=branch.background_key, 
-            background=branch.background
+            background_key=branch.background_key,
+            background=branch.background,
+            order_number=branch.order_number,
         )
 
         response = await self.__insert_structure(query=query)
@@ -212,6 +215,7 @@ class PrivateDBInsertRepository(BaseDBRepository):
             description=lecture.description, 
             background_key=lecture.background_key, 
             background=lecture.background,
+            order_number=lecture.order_number,
         )
 
         response = await self.__insert_structure(query=query)

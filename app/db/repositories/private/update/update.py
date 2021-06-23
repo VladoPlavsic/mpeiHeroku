@@ -98,7 +98,7 @@ class PrivateDBUpdateRepository(BaseDBRepository):
         background_url - if background_key is updated, background url is to be passed
         else leave it None
         """
-        response = await self.__update(query=update_grade_query(id=updated.id, name_ru=updated.name_ru, background_url=background_url, background_key=updated.background_key))
+        response = await self.__update(query=update_grade_query(id=updated.id, name_ru=updated.name_ru, background_url=background_url, background_key=updated.background_key, order_number=updated.order_number))
         if not response:
             raise HTTPException(status_code=404, detail=f"Grade not updated, nothing found for give id {updated.id}")
         return GradeInDB(**response)
@@ -110,7 +110,7 @@ class PrivateDBUpdateRepository(BaseDBRepository):
         background_url - if background_key is updated, background url is to be passed
         else leave it None
         """
-        response = await self.__update(query=update_subject_query(id=updated.id, name_ru=updated.name_ru, background_url=background_url, background_key=updated.background_key))
+        response = await self.__update(query=update_subject_query(id=updated.id, name_ru=updated.name_ru, background_url=background_url, background_key=updated.background_key, order_number=updated.order_number))
         if not response:
             raise HTTPException(status_code=404, detail=f"Subject not updated, nothing found for give id {updated.id}")
         return SubjectInDB(**response)
@@ -122,7 +122,7 @@ class PrivateDBUpdateRepository(BaseDBRepository):
         background_url - if background_key is updated, background url is to be passed
         else leave it None
         """
-        response = await self.__update(query=update_branch_query(id=updated.id, name_ru=updated.name_ru, background_url=background_url, background_key=updated.background_key))
+        response = await self.__update(query=update_branch_query(id=updated.id, name_ru=updated.name_ru, background_url=background_url, background_key=updated.background_key, order_number=updated.order_number))
         if not response:
             raise HTTPException(status_code=404, detail=f"Branch not updated, nothing found for give id {updated.id}")
         return BranchInDB(**response)
@@ -134,7 +134,7 @@ class PrivateDBUpdateRepository(BaseDBRepository):
         background_url - if background_key is updated, background url is to be passed
         else leave it None
         """
-        response = await self.__update(query=update_lecture_query(id=updated.id, name_ru=updated.name_ru, description=updated.description, background_url=background_url, background_key=updated.background_key))
+        response = await self.__update(query=update_lecture_query(id=updated.id, name_ru=updated.name_ru, description=updated.description, background_url=background_url, background_key=updated.background_key, order_number=updated.order_number))
         if not response:
             raise HTTPException(status_code=404, detail=f"Lecture not updated, nothing found for give id {updated.id}")
         return LectureInDB(**response)

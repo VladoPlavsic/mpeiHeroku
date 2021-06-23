@@ -6,7 +6,7 @@ def create_payment_request_query(user_fk: int, offer_fk: int, payment_id: str, l
 
 def check_payment_request_query(user_fk: int, offer_fk: int, level: int):
     return \
-        f"SELECT subscriptions.check_subscription_pending({user_fk}, {offer_fk}, {level}) AS pending"
+        f"SELECT subscriptions.check_subscription_pending({user_fk}, {offer_fk}, {level}) AS payment_id"
 
 def get_payment_request_query(payment_id: str):
     return \

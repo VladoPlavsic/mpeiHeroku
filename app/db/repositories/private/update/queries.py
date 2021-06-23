@@ -39,21 +39,21 @@ def update_presentation_part_links_query(keys, links, presentation, media_type) 
         f"SELECT private.update_{presentation}_{media_type}_links('{{{keys}}}', '{{{links}}}')"
 
 # Update data
-def update_grade_query(id, name_ru, background_url, background_key) -> str:
+def update_grade_query(id, name_ru, background_url, background_key, order_number) -> str:
     return \
-        f"SELECT (private.update_grade({id}, {string_or_null(name_ru, background_url, background_key)})).*"
+        f"SELECT (private.update_grade({id}, {string_or_null(name_ru, background_url, background_key)}, {order_number})).*"
 
-def update_subject_query(id, name_ru, background_url, background_key) -> str:
+def update_subject_query(id, name_ru, background_url, background_key, order_number) -> str:
     return \
-        f"SELECT (private.update_subject({id}, {string_or_null(name_ru, background_url, background_key)})).*"
+        f"SELECT (private.update_subject({id}, {string_or_null(name_ru, background_url, background_key)}, {order_number})).*"
 
-def update_branch_query(id, name_ru,  background_url, background_key) -> str:
+def update_branch_query(id, name_ru,  background_url, background_key, order_number) -> str:
     return \
-        f"SELECT (private.update_branch({id}, {string_or_null(name_ru, background_url, background_key)})).*"
+        f"SELECT (private.update_branch({id}, {string_or_null(name_ru, background_url, background_key)}, {order_number})).*"
 
-def update_lecture_query(id, name_ru, description, background_url, background_key) -> str:
+def update_lecture_query(id, name_ru, description, background_url, background_key, order_number) -> str:
     return \
-        f"SELECT (private.update_lecture({id}, {string_or_null(name_ru, description, background_url, background_key)})).*"
+        f"SELECT (private.update_lecture({id}, {string_or_null(name_ru, description, background_url, background_key)}, {order_number})).*"
 
 def update_video_query(id, name_ru, description, url) -> str:
     return \

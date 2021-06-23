@@ -106,6 +106,7 @@ class GradeCoreModel(DBCoreModel):
     name_en: str
     name_ru: str
     background_key: str
+    order_number: int
 
 class GradePostModel(GradeCoreModel):
     pass
@@ -130,6 +131,7 @@ class SubjectCoreModel(DBCoreModel):
     name_en: str
     name_ru: str
     background_key: str
+    order_number: int
 
 class SubejctPostModel(SubjectCoreModel):
     pass
@@ -157,6 +159,7 @@ class BranchCoreModel(DBCoreModel):
     name_en: str
     name_ru: str
     background_key: str
+    order_number: int
 
 class BranchPostModel(BranchCoreModel):
     pass
@@ -186,6 +189,7 @@ class LectureCoreModel(DBCoreModel):
     name_ru: str
     description: str
     background_key: str
+    order_number: int
 
 class LecturePostModel(LectureCoreModel):
     pass
@@ -273,9 +277,11 @@ class UpdateGameModel(UpdateBaseModel):
 class UpdateLectureModel(UpdateBaseModel):
     description: Optional[str]
     background_key: Optional[str]
+    order_number: Optional[int]
 
 class UpdateStructureModel(UpdateBaseModel):
     background_key: Optional[str]
+    order_number: Optional[int]
 
 class UpdateBookModel(UpdateBaseModel):
     description: Optional[str]

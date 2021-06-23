@@ -4,7 +4,6 @@ from fastapi.security import OAuth2PasswordRequestForm
 
 from starlette.status import HTTP_200_OK
 
-
 from app.models.email import QuestionEmail
 
 from app.api.dependencies.email import send_message, create_confirm_code_msg, create_confirm_link
@@ -77,7 +76,7 @@ async def user_login_with_email_and_password_send_code(
         )
 
     confirmation_code = generate_confirmation_code()
-    await user_repo.set_confirmation_code(user_id=user.id, confirmation_code=confirmation_code)
+    confirmation_code = await user_repo.set_confirmation_code(user_id=user.id, confirmation_code=confirmation_code)
 
     background_tasks.add_task(send_message, subject="Confirmation code.", message_text=create_confirm_code_msg(confirmation_code=confirmation_code), to=user.email)
 
@@ -98,12 +97,13 @@ async def user_login_with_email_and_password(
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    if confirmation_code != user.confirmation_code:
+    if not await user_repo.check_code(user_id=user.id, code=confirmation_code):
         raise HTTPException(
             status_code=401,
             detail="Authentication was unsuccessful.",
             headers={"WWW-Authenticate": "Bearer"},
         )
+
     access_token = AccessToken(access_token=auth_service.create_access_token_for_user(user=user), token_type="bearer")
 
     await user_repo.set_jwt_token(user_id=user.id, token=access_token.access_token)
@@ -127,14 +127,12 @@ async def subscription_notification_hnd(
     user_repo: UsersDBRepository = Depends(get_db_repository(UsersDBRepository)),
     ) -> None:
 
-    print(notification_object)
     notification = await notification_object.json()
-    print(notification)
 
     if notification["event"] == "payment.succeeded":
         payment_object = await user_repo.get_payment_request(payment_id=notification["object"]["id"])
 
-        # in case we didn't find any payment object for given id
+        # in case we didn't find any payment object for given id send email to administrator with given payment confirmation data
         if not payment_object:
             background_tasks.add_task(send_message, subject="Payment confirmation failed. Required assistence.", message_text=f"There was error in confirming payment request. This might have happened because there was no recorded payment request with given payment ID when the notification was raised. Notification detail: {notification}")
             return None
@@ -148,8 +146,3 @@ async def subscription_notification_hnd(
         await user_repo.delete_pending_subscription(payment_id=notification["object"]["id"])
 
     return None
-
-# TODO:
-# ###
-# 1. Create a route for notifications
-# 4. Delete realy old pending statuses

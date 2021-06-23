@@ -50,8 +50,13 @@ class UsersDBSelectRepository(BaseDBRepository):
         
         return user
 
-    async def set_confirmation_code(self, *, user_id: int, confirmation_code: str) -> None:
-        await self.__select_one(query=set_confirmation_code_query(user_id=user_id, confirmation_code=confirmation_code))
+    async def check_code(self, *, user_id: int, code: str) -> bool:
+        response = await self.__select_one(query=check_confirmation_code_query(user_id=user_id, confirmation_code=code))
+        return response["valid"]
+
+    async def set_confirmation_code(self, *, user_id: int, confirmation_code: str) -> str:
+        response = await self.__select_one(query=set_confirmation_code_query(user_id=user_id, confirmation_code=confirmation_code))
+        return response["code"]
 
     async def __select_one(self, *, query):
         try:

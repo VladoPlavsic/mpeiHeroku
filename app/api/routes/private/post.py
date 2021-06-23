@@ -176,7 +176,7 @@ async def create_private_grade(
         raise HTTPException(status_code=HTTP_403_FORBIDDEN, detail="Email not verified!")
 
     background = cdn_repo.get_background_url(key=grade.background_key, remove_extra=True)
-    response  = await db_repo.insert_grade(grade=GradeCreateModel(name_en=grade.name_en , name_ru=grade.name_ru, background_key=grade.background_key, background=background))
+    response  = await db_repo.insert_grade(grade=GradeCreateModel(name_en=grade.name_en , name_ru=grade.name_ru, background_key=grade.background_key, background=background, order_number=grade.order_number))
 
     return response
 
@@ -195,7 +195,7 @@ async def create_private_subject(
         raise HTTPException(status_code=HTTP_403_FORBIDDEN, detail="Email not verified!")
 
     background = cdn_repo.get_background_url(key=subject.background_key, remove_extra=True)
-    response  = await db_repo.insert_subject(subject=SubjectCreateModel(fk=subject.fk, name_en=subject.name_en , name_ru=subject.name_ru, background_key=subject.background_key, background=background))
+    response  = await db_repo.insert_subject(subject=SubjectCreateModel(fk=subject.fk, name_en=subject.name_en , name_ru=subject.name_ru, background_key=subject.background_key, background=background, order_number=subject.order_number))
 
     return response
 
@@ -213,7 +213,7 @@ async def create_private_branch(
         raise HTTPException(status_code=HTTP_403_FORBIDDEN, detail="Email not verified!")
 
     background = cdn_repo.get_background_url(key=branch.background_key, remove_extra=True)    
-    response  = await db_repo.insert_branch(branch=BranchCreateModel(fk=branch.fk, name_en=branch.name_en , name_ru=branch.name_ru, background_key=branch.background_key, background=background))
+    response  = await db_repo.insert_branch(branch=BranchCreateModel(fk=branch.fk, name_en=branch.name_en , name_ru=branch.name_ru, background_key=branch.background_key, background=background, order_number=branch.order_number))
 
     return response
 
@@ -232,7 +232,7 @@ async def create_private_lecture(
         raise HTTPException(status_code=HTTP_403_FORBIDDEN, detail="Email not verified!")
 
     background = cdn_repo.get_background_url(key=lecture.background_key, remove_extra=True)    
-    response  = await db_repo.insert_lecture(lecture=LectureCreateModel(fk=lecture.fk, name_en=lecture.name_en , name_ru=lecture.name_ru, description=lecture.description, background_key=lecture.background_key, background=background))
+    response  = await db_repo.insert_lecture(lecture=LectureCreateModel(fk=lecture.fk, name_en=lecture.name_en , name_ru=lecture.name_ru, description=lecture.description, background_key=lecture.background_key, background=background, order_number=lecture.order_number))
 
     return response
 
