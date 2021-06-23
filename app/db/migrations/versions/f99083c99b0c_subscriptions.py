@@ -368,10 +368,6 @@ def create_subscription_functions() -> None:
     END $$ LANGUAGE plpgsql;
     """)
 
-    # UPDATE AVAILABLE SUBSCRIPTION PLANS
-    # grades
-    # subjects
-
 
 def drop_functions() -> None:
     functions = [

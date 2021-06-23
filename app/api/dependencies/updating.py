@@ -71,7 +71,7 @@ async def update_sharing_links_function(
         private_practice_audio = await private_db_repo.select_all_presentation_parts(presentation='practice', media_type='audio')
         if private_practice_audio:
             updated = cdn_repo.get_sharing_links_from_objects(list_of_objects=private_practice_audio, type_='parts')
-            await db_repo.update_presentation_part_links(prats=updated, presentation='practice', media_type='audio')
+            await private_db_repo.update_presentation_part_links(prats=updated, presentation='practice', media_type='audio')
 
         # public content update
         public_books = await public_db_repo.select_all_books()

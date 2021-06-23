@@ -134,7 +134,7 @@ def create_handling_functions() -> None:
     CREATE OR REPLACE FUNCTION users.prolong_grade_subscription(user_id int, grade_id int, months int, for_life boolean default 'f')
     RETURNS VOID
     AS $$
-    BEGIN 
+    BEGIN
         UPDATE users.user_grades SET
             expiration_date = users.user_grades.expiration_date + interval '1 month' * months,
             updated_at = now(),
@@ -147,7 +147,7 @@ def create_handling_functions() -> None:
     CREATE OR REPLACE FUNCTION users.prolong_subject_subscription(user_id int, subject_id int, months int, for_life boolean default 'f')
     RETURNS VOID
     AS $$ 
-    BEGIN 
+    BEGIN
         UPDATE users.user_subjects SET
             expiration_date = users.user_subjects.days_left + interval '1 month' * months,
             updated_at = now(),
