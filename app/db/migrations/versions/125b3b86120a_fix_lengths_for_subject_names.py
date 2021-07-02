@@ -391,7 +391,7 @@ def create_stored_procedures_select() -> None:
         RETURNS TABLE (url text, "order" int, key text)
         AS $$
         BEGIN
-        RETURN QUERY (SELECT private.theory_image.url, private.theory_image."order", private.theory_image.key FROM private.theory_image WHERE private.theory_image.fk = $1);
+        RETURN QUERY (SELECT private.theory_image.url, private.theory_image."order", private.theory_image.key FROM private.theory_image WHERE private.theory_image.fk = $1 ORDER BY private.theory_image.order);
         END $$ LANGUAGE plpgsql;
     """)
     # theory audio
@@ -419,7 +419,7 @@ def create_stored_procedures_select() -> None:
         RETURNS TABLE (url text, "order" int, key text)
         AS $$
         BEGIN
-        RETURN QUERY (SELECT private.practice_image.url, private.practice_image."order", private.practice_image.key FROM private.practice_image WHERE private.practice_image.fk = $1);
+        RETURN QUERY (SELECT private.practice_image.url, private.practice_image."order", private.practice_image.key FROM private.practice_image WHERE private.practice_image.fk = $1 ORDER BY private.practice_image.order);
         END $$ LANGUAGE plpgsql;
     """)
     # practice audio

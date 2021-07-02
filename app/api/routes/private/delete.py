@@ -146,11 +146,11 @@ async def delete_private_book(
 
     return None
 
-
-# non cdn content
-@router.delete('/video/youtube')
+# half cdn content
+@router.delete('/video')
 async def delete_private_video(
     id: int,
+    cdn_repo: PrivateYandexCDNRepository = Depends(get_cdn_repository(PrivateYandexCDNRepository)),
     db_repo: PrivateDBRepository = Depends(get_db_repository(PrivateDBRepository)),
     user: UserInDB = Depends(get_user_from_token),
     is_superuser = Depends(is_superuser),
@@ -161,9 +161,32 @@ async def delete_private_video(
     if not is_verified:
         raise HTTPException(status_code=HTTP_403_FORBIDDEN, detail="Email not verified!")
 
-    await db_repo.delete_video(id=id)
+    deleted_key = await db_repo.delete_video(id=id)
+    if deleted_key:
+        cdn_repo.delete_folder_by_inner_key(key=deleted_key)
 
     return None
+
+
+@router.delete("/quiz")
+async def delete_private_quiz(
+    id: int,
+    db_repo: PrivateDBRepository = Depends(get_db_repository(PrivateDBRepository)),
+    cdn_repo: PrivateYandexCDNRepository = Depends(get_cdn_repository(PrivateYandexCDNRepository)),
+    user: UserInDB = Depends(get_user_from_token),
+    is_verified = Depends(is_verified),
+    ) -> None:
+    if not user.is_superuser:
+        raise HTTPException(status_code=HTTP_403_FORBIDDEN, detail="Not superuser!")
+    if not is_verified:
+        raise HTTPException(status_code=HTTP_403_FORBIDDEN, detail="Email not verified!")
+
+    deleted_key = await db_repo.delete_quiz(id=id)
+    if deleted_key:
+        cdn_repo.delete_folder_by_inner_key(key=deleted_key)
+
+    return None
+
 
 # non cdn content
 @router.delete('/game')

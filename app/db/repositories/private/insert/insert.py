@@ -18,6 +18,8 @@ from app.models.private import PresentationCreateModel, PresentationMediaCreate
 from app.models.private import BookCreateModel
 from app.models.private import VideoCreateModel
 from app.models.private import GameCreateModel
+from app.models.private import AnswersInDB
+from app.models.private import QuizCreateModel
 # structure
 from app.models.private import GradeCreateModel
 from app.models.private import SubjectCreateModel
@@ -33,6 +35,7 @@ from app.models.private import PresentationInDB, PresentationMediaInDB
 from app.models.private import BookInDB
 from app.models.private import VideoInDB
 from app.models.private import GameInDB
+from app.models.private import QuizQuestionInDB
 # structure
 from app.models.private import GradeInDB
 from app.models.private import SubjectInDB
@@ -131,40 +134,32 @@ class PrivateDBInsertRepository(BaseDBRepository):
         elif content_type == "book":
             query = insert_book_query(fk=material.fk, name_ru=material.name_ru, description=material.description, key=material.key, url=material.url)
 
-        try:
-            inserted = await self.db.fetch_one(query=query)
-        except ForeignKeyViolationError as e:
-            logger.error(f"--- ForeignKeyViolationError RAISED TRYING TO INSERT {content_type} ---")
-            logger.error(e)
-            logger.error(f"--- ForeignKeyViolationError RAISED TRYING TO INSERT {content_type} ---")
-            raise HTTPException(status_code=404, detail=f"Insert {content_type} raised ForeignKeyViolationError. No such key in table lectures.")
-        except Exception as e:
-            logger.error(f"--- ERROR RAISED TRYING TO INSERT {content_type} ---")
-            logger.error(e)
-            logger.error(f"--- ERROR RAISED TRYING TO INSERT {content_type} ---")
-            raise HTTPException(status_code=400, detail=f"Unhandled error raised trying to insert {content_type}. Exited with {e}")
-
-        return BookInDB(**inserted) if content_type == "book" else VideoInDB(**inserted)
+        response = await self.__insert(query=query)
+        return BookInDB(**response) if content_type == "book" else VideoInDB(**response)
 
     async def insert_game(self, *, game: GameCreateModel) -> GameInDB:
 
-        query = insert_game_query(fk=game.fk, name_ru=game.name_ru, description=game.description, url=game.url)
+        response = await self.__insert(query=insert_game_query(fk=game.fk, name_ru=game.name_ru, description=game.description, url=game.url))
+        return GameInDB(**response)
 
-        try:
-            inserted = await self.db.fetch_one(query=query)
-        except ForeignKeyViolationError as e:
-            logger.error(f"--- ForeignKeyViolationError RAISED TRYING TO INSERT GAME ---")
-            logger.error(e)
-            logger.error(f"--- ForeignKeyViolationError RAISED TRYING TO INSERT GAME ---")
-            raise HTTPException(status_code=404, detail=f"Insert game raised ForeignKeyViolationError. No such key in table lectures.")
-        except Exception as e:
-            logger.error(f"--- ERROR RAISED TRYING TO INSERT GAME ---")
-            logger.error(e)
-            logger.error(f"--- ERROR RAISED TRYING TO INSERT GAME ---")
-            raise HTTPException(status_code=400, detail=f"Unhandled error raised trying to insert book. Exited with {e}")
+    async def insert_quiz_question(self, *, quiz_question: QuizCreateModel) -> QuizQuestionInDB:
+        answers = [answer.answer for answer in quiz_question.answers]
+        is_true = [answer.is_true for answer in quiz_question.answers]
 
-        return GameInDB(**inserted)
+        response = await self.__insert_many(query=insert_quiz_question_query(
+            lecture_id=quiz_question.lecture_id, 
+            order_number=quiz_question.order_number, 
+            question=quiz_question.question, 
+            image_key=quiz_question.image_key, 
+            image_url=quiz_question.image_url,
+            answers=answers, 
+            is_true=is_true,
+            )
+        )
 
+        answers = [AnswersInDB(**answer) for answer in response]
+
+        return QuizQuestionInDB(**response[0], answers=answers)
 
     # ### 
     # insert structure
@@ -178,7 +173,7 @@ class PrivateDBInsertRepository(BaseDBRepository):
             order_number=grade.order_number,
         )
 
-        response = await self.__insert_structure(query=query)
+        response = await self.__insert(query=query)
         return GradeInDB(**response)
 
     async def insert_subject(self, *, subject: SubjectCreateModel) -> SubjectInDB:
@@ -191,7 +186,7 @@ class PrivateDBInsertRepository(BaseDBRepository):
             order_number=subject.order_number,
         )
 
-        response = await self.__insert_structure(query=query)
+        response = await self.__insert(query=query)
         return SubjectInDB(**response)
 
     async def insert_branch(self, *, branch: BranchCreateModel) -> BranchInDB:
@@ -204,7 +199,7 @@ class PrivateDBInsertRepository(BaseDBRepository):
             order_number=branch.order_number,
         )
 
-        response = await self.__insert_structure(query=query)
+        response = await self.__insert(query=query)
         return BranchInDB(**response)
 
     async def insert_lecture(self, *, lecture: LectureCreateModel) -> LectureInDB:
@@ -218,31 +213,48 @@ class PrivateDBInsertRepository(BaseDBRepository):
             order_number=lecture.order_number,
         )
 
-        response = await self.__insert_structure(query=query)
+        response = await self.__insert(query=query)
         return LectureInDB(**response)
 
         
     # Insert available subscription plans
     # grades
     async def insert_available_grade_plan(self, *, name: str,  price: float, month_count: int) -> None:
-        await self.__insert_structure(query=insert_available_grade_plans_query(name=name, price=price, month_count=month_count))
+        await self.__insert(query=insert_available_grade_plans_query(name=name, price=price, month_count=month_count))
 
     # subjects
     async def insert_available_subject_plan(self, *, name: str, price: float, month_count: int) -> None:
-        await self.__insert_structure(query=insert_available_subject_plans_query(name=name, price=price, month_count=month_count))
+        await self.__insert(query=insert_available_subject_plans_query(name=name, price=price, month_count=month_count))
 
-    async def __insert_structure(self, *, query) -> Record:
+
+    async def __insert(self, *, query) -> Record:
         try:
             response = await self.db.fetch_one(query=query)
         except ForeignKeyViolationError as e:
-            logger.error(f"--- ForeignKeyViolationError RAISED TRYING TO INSERT ONE OF STRUCTURAL QUERIES ---")
+            logger.error(f"--- ForeignKeyViolationError RAISED TRYING TO INSERT ONE OF PRIVATE QUERIES ---")
             logger.error(e)
-            logger.error(f"--- ForeignKeyViolationError RAISED TRYING TO INSERT ONE OF STRUCTURAL QUERIES ---")
+            logger.error(f"--- ForeignKeyViolationError RAISED TRYING TO INSERT ONE OF PRIVATE QUERIES ---")
             raise HTTPException(status_code=404, detail=f"Insert query raised ForeignKeyViolationError. No such key in parent table. {query}")
         except Exception as e:
-            logger.error(f"--- ERROR RAISED TRYING TO INSERT ONE OF STRUCTURAL QUERIES ---")
+            logger.error(f"--- ERROR RAISED TRYING TO INSERT ONE OF PRIVATE QUERIES ---")
             logger.error(e)
-            logger.error(f"--- ERROR RAISED TRYING TO INSERT ONE OF STRUCTURAL QUERIES ---")
-            raise HTTPException(status_code=400, detail=f"Unhandled error raised trying to insert one of structural queries. Exited with {e}")
+            logger.error(f"--- ERROR RAISED TRYING TO INSERT ONE OF PRIVATE QUERIES---")
+            raise HTTPException(status_code=400, detail=f"Unhandled error raised trying to insert one of private queries. Exited with {e}")
+        
+        return response
+
+    async def __insert_many(self, *, query) -> Record:
+        try:
+            response = await self.db.fetch_all(query=query)
+        except ForeignKeyViolationError as e:
+            logger.error(f"--- ForeignKeyViolationError RAISED TRYING TO INSERT ONE OF PRIVATE QUERIES ---")
+            logger.error(e)
+            logger.error(f"--- ForeignKeyViolationError RAISED TRYING TO INSERT ONE OF PRIVATE QUERIES ---")
+            raise HTTPException(status_code=404, detail=f"Insert query raised ForeignKeyViolationError. No such key in parent table. {query}")
+        except Exception as e:
+            logger.error(f"--- ERROR RAISED TRYING TO INSERT ONE OF PRIVATE QUERIES ---")
+            logger.error(e)
+            logger.error(f"--- ERROR RAISED TRYING TO INSERT ONE OF PRIVATE QUERIES---")
+            raise HTTPException(status_code=400, detail=f"Unhandled error raised trying to insert one of private queries. Exited with {e}")
         
         return response

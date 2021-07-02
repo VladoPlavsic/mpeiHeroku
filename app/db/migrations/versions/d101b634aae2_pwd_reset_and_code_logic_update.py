@@ -49,7 +49,7 @@ def update_login_logic() -> None:
         SELECT COUNT(*) INTO exists FROM users.codes WHERE user_fk = user_id;
         IF exists = 0 or expiration_date < now() THEN
             DELETE FROM users.codes WHERE user_fk = user_id;
-            INSERT INTO users.codes VALUES(user_id, i_confirmation, now() + interval '3 minute');
+            INSERT INTO users.codes VALUES(user_id, i_confirmation, now() + interval '5 minute');
         END IF;
         SELECT confirmation_code INTO code FROM users.codes WHERE user_fk = user_id;
         RETURN code;

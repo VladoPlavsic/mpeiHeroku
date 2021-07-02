@@ -60,7 +60,11 @@ def create_handling_functions() -> None:
     AS $$
     BEGIN
         IF (SELECT month_count FROM subscriptions.grade_subscription_plans WHERE id = i_subscription_fk) > 0 THEN
-            INSERT INTO users.user_grades(user_fk, grade_fk, expiration_date, for_life) VALUES (i_user_id, i_grade_id, now() + interval '1 month' * (SELECT month_count FROM subscriptions.grade_subscription_plans WHERE id = i_subscription_fk), 'f');
+            IF (SELECT expiration_date FROM users.user_grades WHERE user_fk = i_user_id) > now() THEN
+                INSERT INTO users.user_grades(user_fk, grade_fk, expiration_date, for_life) VALUES (i_user_id, i_grade_id, (SELECT expiration_date FROM users.user_grades WHERE user_fk = i_user_id) + interval '1 month' * (SELECT month_count FROM subscriptions.grade_subscription_plans WHERE id = i_subscription_fk), 'f');
+            ELSE
+                INSERT INTO users.user_grades(user_fk, grade_fk, expiration_date, for_life) VALUES (i_user_id, i_grade_id, now() + interval '1 month' * (SELECT month_count FROM subscriptions.grade_subscription_plans WHERE id = i_subscription_fk), 'f');
+            END IF;
         ELSE
             INSERT INTO users.user_grades(user_fk, grade_fk, expiration_date, for_life) VALUES (i_user_id, i_grade_id, now(), 't');
         END IF;
@@ -73,7 +77,11 @@ def create_handling_functions() -> None:
     AS $$
     BEGIN
         IF (SELECT month_count FROM subscriptions.subject_subscription_plans WHERE id = i_subscription_fk) > 0 THEN
-            INSERT INTO users.user_subjects(user_fk, subject_fk, expiration_date, for_life) VALUES (i_user_id, i_subject_id, now() + interval '1 month' * (SELECT month_count FROM subscriptions.grade_subscription_plans WHERE id = i_subscription_fk), 'f');
+            IF (SELECT expiration_date FROM users.user_subjects WHERE user_fk = i_user_id) > now() THEN
+                INSERT INTO users.user_subjects(user_fk, subject_fk, expiration_date, for_life) VALUES (i_user_id, i_subject_id, (SELECT expiration_date FROM users.user_subjects WHERE user_fk = i_user_id) + interval '1 month' * (SELECT month_count FROM subscriptions.grade_subscription_plans WHERE id = i_subscription_fk), 'f');
+            ELSE
+                INSERT INTO users.user_subjects(user_fk, subject_fk, expiration_date, for_life) VALUES (i_user_id, i_subject_id, now() + interval '1 month' * (SELECT month_count FROM subscriptions.grade_subscription_plans WHERE id = i_subscription_fk), 'f');
+            END IF;
         ELSE
             INSERT INTO users.user_subjects(user_fk, subject_fk, expiration_date, for_life) VALUES (i_user_id, i_subject_id, now(), 't');
         END IF;

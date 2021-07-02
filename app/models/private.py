@@ -98,6 +98,64 @@ class GameInDB(GameModelCore):
     id: int
 
 # ###
+# Quiz models
+# ###
+class AnswerCoreModel(DBCoreModel):
+    answer: str
+    is_true: Optional[bool]    
+
+class AnswersInDB(AnswerCoreModel):
+    question_id: int
+    answer_id: int
+
+class QuizModelCore(DBCoreModel):
+    lecture_id: int
+    order_number: int
+    question: Optional[str]
+    image_key: Optional[str]
+    answers: List[AnswerCoreModel]
+
+class QuizPostModel(QuizModelCore):
+    pass
+
+class QuizCreateModel(QuizModelCore):
+    image_url: Optional[str]
+
+class QuestionInDB(DBCoreModel):
+    id: int
+    fk: int
+    order_number: int
+    question: Optional[str]
+    image_key: Optional[str]
+    image_url: Optional[str]
+
+class QuizQuestionInDB(QuestionInDB):
+    answers: List[AnswersInDB]
+
+class QuizInDB(DBCoreModel):
+    questions: List[QuizQuestionInDB]
+
+class QuizQuestionAnswerPair(DBCoreModel):
+    question: int
+    answer: int
+
+class QuizGetResultsModel(DBCoreModel):
+    results: List[QuizQuestionAnswerPair]
+    lecture_id: int
+
+class QuizQuestionAnswerCorrectPair(DBCoreModel):
+    question_id: int
+    answer_id: int
+    question_number: int
+    answer: str
+    correct: bool
+    correct_answer: str
+
+class QuizResults(DBCoreModel):
+    results: List[QuizQuestionAnswerCorrectPair]
+    lecture_id: int
+
+# ###
 # Structure models
 # ###
 
@@ -212,6 +270,7 @@ class MaterialResponseModel(DBCoreModel):
     video: Optional[VideoInDB]
     game: Optional[GameInDB]
     book: Optional[BookInDB]
+    quiz: Optional[QuizInDB]
     practice: Optional[PresentationInDB]
     theory: Optional[PresentationInDB]
 

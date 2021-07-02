@@ -30,6 +30,10 @@ def delete_video_query(id) -> str:
     return \
         f"SELECT private.delete_video_by_id({id}) AS key"
 
+def delete_quiz_query(id) -> str:
+    return \
+        f"SELECT private.delete_quiz_by_id({id}) AS key"
+
 # we don't need to return anything from these
 def delete_game_query(id) -> str:
     return \

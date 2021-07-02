@@ -13,29 +13,32 @@ logger = logging.getLogger(__name__)
 
 class PrivateDBDeleteRepository(BaseDBRepository):
 
-    async def delete_grade(self, *, id) -> int:
+    async def delete_grade(self, *, id) -> str:
         return await self.__delete(query=delete_grade_query(id=id))
 
-    async def delete_subject(self, *, id) -> int:
+    async def delete_subject(self, *, id) -> str:
         return await self.__delete(query=delete_subject_query(id=id))
 
-    async def delete_branch(self, *, id) -> int:
+    async def delete_branch(self, *, id) -> str:
         return await self.__delete(query=delete_branch_query(id=id))
 
-    async def delete_lecture(self, *, id) -> int:
+    async def delete_lecture(self, *, id) -> str:
         return await self.__delete(query=delete_lecture_query(id=id))
 
-    async def delete_theory(self, *, id) -> int:
+    async def delete_theory(self, *, id) -> str:
         return await self.__delete(query=delete_theory_query(id=id))
 
-    async def delete_practice(self, *, id) -> int:
+    async def delete_practice(self, *, id) -> str:
         return await self.__delete(query=delete_practice_query(id=id))
 
-    async def delete_book(self, *, id) -> int:
+    async def delete_book(self, *, id) -> str:
         return await self.__delete(query=delete_book_query(id=id))
 
-    async def delete_video(self, *, id) -> int:
+    async def delete_video(self, *, id) -> str:
         return await self.__delete(query=delete_video_query(id=id), none_response_raise=False)
+
+    async def delete_quiz(self, *, id) -> str:
+        return await self.__delete(query=delete_quiz_query(id=id), none_response_raise=False)
 
     async def delete_game(self, *, id) -> None:
         await self.__delete(query=delete_game_query(id=id), none_response_raise=False)

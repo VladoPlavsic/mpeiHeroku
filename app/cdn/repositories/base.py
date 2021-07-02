@@ -163,17 +163,22 @@ class BaseCDNRepository:
         """
         Accepts prefix at which our book is located
         """
-        return self.__form_video_or_book(prefix=prefix, content_type='book')
+        return self.__form_one_item_data(prefix=prefix, content_type='book')
         
 
     def form_video_insert_data(self, *, prefix) -> Tuple:
         """
-        Accepts prefix at which our book is located
+        Accepts prefix at which our video is located
         """
-        return self.__form_video_or_book(prefix=prefix, content_type='video')
+        return self.__form_one_item_data(prefix=prefix, content_type='video')
 
+    def form_quiz_insert_data(self, *, prefix) -> Tuple:
+        """
+        ACCEPTS prefix at whici our quiz image is located
+        """
+        return self.__form_one_item_data(prefix=prefix, content_type='quiz')
 
-    def __form_video_or_book(self, *, prefix, content_type: Union['video', 'book']) -> Tuple:
+    def __form_one_item_data(self, *, prefix, content_type: Union['video', 'book']) -> Tuple:
         '''
         Accepts prefix at which our book | video is located
         if multiple files choses last listed
@@ -184,6 +189,8 @@ class BaseCDNRepository:
             suported_formats = ['mp4']
         elif content_type == 'book':
             suported_formats = ['pdf']
+        elif content_type == 'quiz':
+            suported_formats = ['jpg']
 
         prefix = prefix if prefix[-1] == '/' else prefix + '/'
         self.get_object_keys(prefix=prefix)

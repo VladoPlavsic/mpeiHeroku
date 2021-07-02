@@ -257,7 +257,7 @@ def create_link_updating_functions_schema_private():
         END LOOP;
         END $$ LANGUAGE plpgsql;
     """)
-
+ 
 
 def craete_select_all_keys_from_schema_public_functions():
     # thoery images

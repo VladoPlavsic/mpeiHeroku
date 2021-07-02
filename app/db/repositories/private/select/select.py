@@ -18,6 +18,7 @@ from app.models.user import UserAvailableSubjects
 from app.models.private import VideoInDB
 from app.models.private import GameInDB
 from app.models.private import BookInDB
+from app.models.private import QuizInDB, QuizQuestionInDB, AnswersInDB, QuizGetResultsModel, QuizResults, QuizQuestionAnswerCorrectPair
 from app.models.private import PresentationInDB
 from app.models.private import PresentationMediaInDB
 
@@ -156,6 +157,7 @@ class PrivateDBSelectRepository(BaseDBRepository):
         video = await self.select_video(fk=fk)
         book = await self.select_book(fk=fk)
         game = await self.select_game(fk=fk)
+        quiz = await self.select_quiz(fk=fk)
         theory = await self.select_presentation(fk=fk, presentation='theory')
         practice = await self.select_presentation(fk=fk, presentation='practice')
 
@@ -163,6 +165,7 @@ class PrivateDBSelectRepository(BaseDBRepository):
             video=video,
             book=book,
             game=game,
+            quiz=quiz,
             theory=theory,
             practice=practice
         )
@@ -173,6 +176,37 @@ class PrivateDBSelectRepository(BaseDBRepository):
             return None
         return VideoInDB(**response)
 
+    async def select_quiz(self, *, fk) -> QuizInDB:
+        resposnes = await self.__select_many(query=select_quiz_questions_query(fk=fk))
+
+        questions = [QuizQuestionInDB(**response, answers=[]) for response in resposnes]
+        for question in questions:
+            responses = await self.__select_many(query=select_quiz_answers_query(fk=question.id))
+            question.answers = [AnswersInDB(**response) for response in responses]
+
+        return QuizInDB(questions=questions) if len(questions) > 0 else None
+
+    async def check_quiz_results(self, *, quiz_results: QuizGetResultsModel) -> QuizResults:
+        questions = []
+        answers = []
+        for result in quiz_results.results:
+            questions.append(result.question)
+            answers.append(result.answer)
+
+        records = await self.__select_one(query=check_quiz_results_query(questions=questions, answers=answers))
+        response = []
+
+        for index in range(0, len(records['question_ids'])):
+            response.append(QuizQuestionAnswerCorrectPair(
+                question_id=records['question_ids'][index],
+                answer_id=records['answer_ids'][index],
+                question_number=records['question_numbers'][index],
+                answer=records['answers'][index],
+                correct=records['correct'][index],
+                correct_answer=records['correct_answers'][index]
+            ))
+
+        return QuizResults(results=response, lecture_id=quiz_results.lecture_id)
 
     async def select_all_video(self) -> List[MaterialAllModel]:
         """
@@ -180,8 +214,17 @@ class PrivateDBSelectRepository(BaseDBRepository):
         """
         records = await self.__select_many(query=select_all_material_keys_query(table='video'))
 
-        response = [MaterialAllModel(**record) for record in records] 
-        return response       
+        response = [MaterialAllModel(**record) for record in records if record['key']]
+        return response
+
+    async def select_all_quiz(self) -> List[MaterialAllModel]:
+        """
+        Returns list of id, keys for all quizes in database
+        """
+        records = await self.__select_many(query=select_all_material_keys_query(table='quiz_question'))
+
+        response = [MaterialAllModel(**record) for record in records if record['key']]
+        return response
 
     async def select_book(self, *, fk) -> BookInDB:
         response = await self.__select_one(query=select_one_material_query(fk=fk, table='book'), raise_404=False)

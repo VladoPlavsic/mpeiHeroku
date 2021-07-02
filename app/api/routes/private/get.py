@@ -160,8 +160,6 @@ async def get_private_subjects(
 # ###
 # BRANCHES
 # ###
-
-
 @router.get("/branch/available", response_model=BranchResponse, name="private:get-branches", status_code=HTTP_200_OK)
 async def get_private_branches(
     grade_name_en: str,
@@ -230,7 +228,6 @@ async def get_private_branches(
 # ###
 # LECTURES
 # ###
-
 @router.get("/lecture/available", response_model=LectureResponse, name="private:get-lectures", status_code=HTTP_200_OK)
 async def get_private_lectures(
     grade_name_en: str,
@@ -354,6 +351,3 @@ async def get_private_material(
         (fk, path) = await db_repo.get_lecture_by_name(grade_name=grade_name_en, subject_name=subject_name_en, branch_name=branch_name_en, lecture_name=lecture_name_en)
         response = await db_repo.select_material(fk=fk.id)
         return MaterialResponse(material=response, path=path, fk=fk.id)
-
-
-
