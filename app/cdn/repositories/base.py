@@ -202,7 +202,7 @@ class BaseCDNRepository:
         material_key = None
         for key, value in links.items():
             keys_for_deletion.append({"Key":key})
-            if key.split('/')[-1].split('.')[1] in suported_formats:
+            if key.split('/')[-1].split('.')[-1] in suported_formats:
                 material_key = key
                 material_url = value
 

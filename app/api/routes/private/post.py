@@ -187,11 +187,11 @@ async def create_private_quiz(
 async def get_quiz_results(
     quiz_results: QuizGetResultsModel = Body(...),
     db_repo: PrivateDBRepository = Depends(get_db_repository(PrivateDBRepository)),
-    #user: UserInDB = Depends(get_user_from_token),
-    #is_verified = Depends(is_verified),
+    user: UserInDB = Depends(get_user_from_token),
+    is_verified = Depends(is_verified),
     ) -> QuizResults:
-    #if not is_verified:
-    #  raise HTTPException(status_code=HTTP_403_FORBIDDEN, detail="Email not verified!")
+    if not is_verified:
+      raise HTTPException(status_code=HTTP_403_FORBIDDEN, detail="Email not verified!")
 
     response = await db_repo.check_quiz_results(quiz_results=quiz_results)
 
