@@ -5,17 +5,26 @@ from app.models.core import BaseModel
 
 
 class JWTMeta(BaseModel):
-    iss: str = "phresh.io"
+    iss: str = "mpei.ru"
     aud: str = JWT_AUDIENCE
     iat: float = datetime.timestamp(datetime.utcnow())
     exp: float = datetime.timestamp(datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
 
 class JWTCreds(BaseModel):
     """How we'll identify users"""
-    sub: EmailStr
+    email: EmailStr
     phone_number: str
 
-class JWTPayload(JWTMeta, JWTCreds):
+class JWTUserMeta(BaseModel):
+    """All about user"""
+    id: int
+    city: str
+    school: str
+    email_verified: bool
+    is_superuser: bool
+
+
+class JWTPayload(JWTMeta, JWTCreds, JWTUserMeta):
     """
     JWT Payload right before it's encoded - combine meta and username
     """
@@ -24,3 +33,6 @@ class JWTPayload(JWTMeta, JWTCreds):
 class AccessToken(BaseModel):
     access_token: str
     token_type: str
+
+class RefreshToken(BaseModel):
+    refresh_token: str

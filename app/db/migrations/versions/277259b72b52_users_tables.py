@@ -39,7 +39,7 @@ def create_user_tables() -> None:
         sa.Column("id", sa.Integer, primary_key=True),
         sa.Column("full_name", sa.Text, nullable=False),
         sa.Column("email", sa.Text, unique=True, nullable=False, index=True),
-        sa.Column("phone_number", sa.String(20), unique=True, nullable=False),
+        sa.Column("phone_number", sa.String(20), nullable=False),
         sa.Column("city", sa.Text, nullable=False),
         sa.Column("school", sa.Text, nullable=False),
         sa.Column("email_verified", sa.Boolean, nullable=False, server_default="False"),

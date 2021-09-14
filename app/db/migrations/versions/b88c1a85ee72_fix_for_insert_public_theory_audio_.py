@@ -17,13 +17,13 @@ def upgrade() -> None:
     # theory audio insert function
     op.execute("""
     CREATE OR REPLACE FUNCTION public.insert_theory_audio(int[], text[], text[])
-        RETURNS TABLE ("order" int, url text, key text)
+        RETURNS TABLE ("order" int, url text, object_key text)
         AS $$
         BEGIN
         DELETE FROM public.theory_audio;
-        INSERT INTO public.theory_audio ("order", url, key)
+        INSERT INTO public.theory_audio ("order", url, object_key)
         SELECT unnest($1), unnest($2), unnest($3);
-        RETURN QUERY (SELECT public.theory_audio."order", public.theory_audio.url, public.theory_audio.key FROM public.theory_audio);
+        RETURN QUERY (SELECT public.theory_audio."order", public.theory_audio.url, public.theory_audio.object_key FROM public.theory_audio);
         END $$ LANGUAGE plpgsql;
     """)
 

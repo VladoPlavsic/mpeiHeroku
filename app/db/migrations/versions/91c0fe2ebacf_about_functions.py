@@ -16,14 +16,14 @@ depends_on = None
 def create_insert_functions() -> None:
     # our team
     op.execute('''
-    CREATE OR REPLACE FUNCTION about.insert_our_team(i_order int, i_name text, i_role text, i_profession text, i_description text, i_photo_key text, i_photo_link text)
-        RETURNS TABLE ("order" int, name text, role text, profession text, description text, photo_key text, photo_link text)
+    CREATE OR REPLACE FUNCTION about.insert_our_team(i_order int, i_name text, i_role text, i_profession text, i_description text, i_object_key text, i_photo_link text)
+        RETURNS TABLE ("order" int, name text, role text, profession text, description text, object_key text, photo_link text)
         AS $$
         DECLARE 
             inserted_id int;
         BEGIN 
-        INSERT INTO about.our_team ("order", name, role, profession, description, photo_key, photo_link)
-        VALUES (i_order, i_name, i_role,i_profession, i_description, i_photo_key, i_photo_link) RETURNING about.our_team."order" INTO inserted_id;
+        INSERT INTO about.our_team ("order", name, role, profession, description, object_key, photo_link)
+        VALUES (i_order, i_name, i_role,i_profession, i_description, i_object_key, i_photo_link) RETURNING about.our_team."order" INTO inserted_id;
         RETURN QUERY (SELECT * FROM about.our_team WHERE about.our_team.order = inserted_id);
         END $$ LANGUAGE plpgsql;
     ''')
@@ -58,22 +58,22 @@ def create_insert_functions() -> None:
 def create_update_functions() -> None:
     # update teeam member photo links
     op.execute('''
-    CREATE OR REPLACE FUNCTION about.update_team_member_photos(photo_keys text[], photo_links text[])
+    CREATE OR REPLACE FUNCTION about.update_team_member_photos(object_keys text[], photo_links text[])
         RETURNS VOID
         AS $$
         BEGIN
-        FOR index IN 1 .. array_upper(photo_keys, 1)
+        FOR index IN 1 .. array_upper(object_keys, 1)
         LOOP
             UPDATE about.our_team SET
             photo_link = photo_links[index] 
-            WHERE photo_key = photo_keys[index];
+            WHERE object_key = object_keys[index];
         END LOOP;
         END $$ LANGUAGE plpgsql;
     ''')
     # update team member
     op.execute('''
-    CREATE OR REPLACE FUNCTION about.update_team_member(id int, i_order int, i_name text, i_role text, i_profession text, i_photo_key text, i_photo_link text,  i_description text)
-        RETURNS TABLE ("order" int, name text, role text, profession text, description text, photo_key text, photo_link text)
+    CREATE OR REPLACE FUNCTION about.update_team_member(id int, i_order int, i_name text, i_role text, i_profession text, i_object_key text, i_photo_link text,  i_description text)
+        RETURNS TABLE ("order" int, name text, role text, profession text, description text, object_key text, photo_link text)
         AS $$
         BEGIN
         UPDATE about.our_team SET
@@ -82,7 +82,7 @@ def create_update_functions() -> None:
             role = COALESCE(i_role, about.our_team.role),
             profession = COALESCE(i_profession, about.our_team.profession), 
             description = COALESCE(i_description, about.our_team.description),
-            photo_key = COALESCE(i_photo_key, about.our_team.photo_key),
+            object_key = COALESCE(i_object_key, about.our_team.object_key),
             photo_link = COALESCE(i_photo_link, about.our_team.photo_link)
         WHERE about.our_team.order = id;
         RETURN QUERY (SELECT * FROM about.our_team WHERE about.our_team.order = COALESCE(i_order, id));
@@ -119,7 +119,7 @@ def create_select_functions() -> None:
     # select all team members
     op.execute('''
     CREATE OR REPLACE FUNCTION about.select_all_team_members()
-        RETURNS TABLE ("order" int, name text, role text, profession text, description text, photo_key text, photo_link text)
+        RETURNS TABLE ("order" int, name text, role text, profession text, description text, object_key text, photo_link text)
         AS $$
         BEGIN
         RETURN QUERY (SELECT * FROM about.our_team ORDER BY "order");
@@ -148,10 +148,13 @@ def create_delete_functions() -> None:
     # delete team member
     op.execute('''
     CREATE OR REPLACE FUNCTION about.delete_team_member(id int)
-        RETURNS VOID 
+        RETURNS TEXT
         AS $$
-        BEGIN 
-        DELETE FROM about.our_team WHERE "order" = id;
+        DECLARE
+            key TEXT;
+        BEGIN
+        DELETE FROM about.our_team WHERE "order" = id RETURNING object_key INTO key;
+        RETURN key;
         END $$ LANGUAGE plpgsql;
     ''')
     # delete about project

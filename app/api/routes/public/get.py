@@ -25,14 +25,12 @@ async def get_public_material(
     response = await db_repo.select_material()
     return MaterialResponse(material=response)
 
-
 @router.get("/about_us", response_model=AboutUsAllResponse, name="public:get-about_us", status_code=HTTP_200_OK)
 async def get_about_us(
     public_repo: PublicDBRepository = Depends(get_db_repository(PublicDBRepository))
     ) -> AboutUsAllResponse:
 
     response = await public_repo.select_about_us()
-
     return AboutUsAllResponse(about_us=response)
 
 @router.get("/instructions", response_model=InstructionAllResponse, name="public:get-instructions", status_code=HTTP_200_OK)
@@ -41,7 +39,6 @@ async def get_instructions(
     ) -> InstructionAllResponse:
 
     response = await public_repo.select_instructions()
-
     return InstructionAllResponse(instructions=response)
 
 @router.get("/faq", response_model=FaqAllResponse, name="public:get-faq", status_code=HTTP_200_OK)

@@ -12,6 +12,8 @@ from app.db.repositories.news.news import NewsDBRepository
 from app.api.dependencies.database import get_db_repository
 from app.api.dependencies.cdn import get_cdn_repository
 
+from app.cdn.types import ObjectTypes
+from app.db.repositories.types import ContentType
 
 import logging
 
@@ -30,100 +32,128 @@ async def update_sharing_links_function(
     async def update():
         grades = await private_db_repo.select_all_grades()
         if grades:
-            updated = cdn_repo.get_sharing_links_from_objects(list_of_objects=grades, type_='structure')
+            updated = cdn_repo.get_sharing_links_from_objects(list_of_objects=grades)
             await private_db_repo.update_grade_links(grades=updated)
 
         subjects = await private_db_repo.select_all_subjects()
         if subjects:
-            updated = cdn_repo.get_sharing_links_from_objects(list_of_objects=subjects, type_='structure')
+            updated = cdn_repo.get_sharing_links_from_objects(list_of_objects=subjects)
             await private_db_repo.update_subject_links(subjects=updated)
 
         branches = await private_db_repo.select_all_branches()
         if branches:
-            updated = cdn_repo.get_sharing_links_from_objects(list_of_objects=branches, type_='structure')
+            updated = cdn_repo.get_sharing_links_from_objects(list_of_objects=branches)
             await private_db_repo.update_branch_links(branches=updated)
 
         lectures = await private_db_repo.select_all_lectures()
         if lectures:
-            updated = cdn_repo.get_sharing_links_from_objects(list_of_objects=lectures, type_='structure')
+            updated = cdn_repo.get_sharing_links_from_objects(list_of_objects=lectures)
             await private_db_repo.update_lecture_links(lectures=updated)
 
         private_books = await private_db_repo.select_all_books()
         if private_books:
-            updated = cdn_repo.get_sharing_links_from_objects(list_of_objects=private_books, type_='material')
+            updated = cdn_repo.get_sharing_links_from_objects(list_of_objects=private_books)
             await private_db_repo.update_book_links(book=updated)
 
         private_video = await private_db_repo.select_all_video()
         if private_video:
-            updated = cdn_repo.get_sharing_links_from_objects(list_of_objects=private_video, type_='material')
+            updated = cdn_repo.get_sharing_links_from_objects(list_of_objects=private_video)
             await private_db_repo.update_video_links(video=updated)
+
+        private_game = await private_db_repo.select_all_game()
+        if private_game:
+            updated = cdn_repo.get_sharing_links_from_objects(list_of_objects=private_game)
+            await private_db_repo.update_game_links(game=updated)
 
         private_quiz = await private_db_repo.select_all_quiz()
         if private_quiz:
-            updated = cdn_repo.get_sharing_links_from_objects(list_of_objects=private_quiz, type_='material')
+            updated = cdn_repo.get_sharing_links_from_objects(list_of_objects=private_quiz)
             await private_db_repo.update_quiz_links(quiz=updated)
 
-        private_theory_images = await private_db_repo.select_all_presentation_parts(presentation='theory', media_type='image')
+        private_theory_images = await private_db_repo.select_all_presentation_parts(presentation=ContentType.THEORY, media_type=ContentType.IMAGE)
         if private_theory_images:
-            updated = cdn_repo.get_sharing_links_from_objects(list_of_objects=private_theory_images, type_='parts')
-            await private_db_repo.update_presentation_part_links(prats=updated, presentation='theory', media_type='image')
+            updated = cdn_repo.get_sharing_links_from_objects(list_of_objects=private_theory_images)
+            await private_db_repo.update_presentation_part_links(prats=updated, presentation=ContentType.THEORY, media_type=ContentType.IMAGE)
 
-        private_theory_audio = await private_db_repo.select_all_presentation_parts(presentation='theory', media_type='audio')
+        private_theory_audio = await private_db_repo.select_all_presentation_parts(presentation=ContentType.THEORY, media_type=ContentType.AUDIO)
         if private_theory_audio:
-            updated = cdn_repo.get_sharing_links_from_objects(list_of_objects=private_theory_audio, type_='parts')
-            await private_db_repo.update_presentation_part_links(prats=updated, presentation='theory', media_type='audio')
+            updated = cdn_repo.get_sharing_links_from_objects(list_of_objects=private_theory_audio)
+            await private_db_repo.update_presentation_part_links(prats=updated, presentation=ContentType.THEORY, media_type=ContentType.AUDIO)
 
-        private_practice_images = await private_db_repo.select_all_presentation_parts(presentation='practice', media_type='image')
+        private_practice_images = await private_db_repo.select_all_presentation_parts(presentation=ContentType.PRACTICE, media_type=ContentType.IMAGE)
         if private_practice_images:
-            updated = cdn_repo.get_sharing_links_from_objects(list_of_objects=private_practice_images, type_='parts')
-            await private_db_repo.update_presentation_part_links(prats=updated, presentation='practice', media_type='image')
+            updated = cdn_repo.get_sharing_links_from_objects(list_of_objects=private_practice_images)
+            await private_db_repo.update_presentation_part_links(prats=updated, presentation=ContentType.PRACTICE, media_type=ContentType.IMAGE)
 
-        private_practice_audio = await private_db_repo.select_all_presentation_parts(presentation='practice', media_type='audio')
+        private_practice_audio = await private_db_repo.select_all_presentation_parts(presentation=ContentType.PRACTICE, media_type=ContentType.AUDIO)
         if private_practice_audio:
-            updated = cdn_repo.get_sharing_links_from_objects(list_of_objects=private_practice_audio, type_='parts')
-            await private_db_repo.update_presentation_part_links(prats=updated, presentation='practice', media_type='audio')
+            updated = cdn_repo.get_sharing_links_from_objects(list_of_objects=private_practice_audio)
+            await private_db_repo.update_presentation_part_links(prats=updated, presentation=ContentType.PRACTICE, media_type=ContentType.AUDIO)
 
         # public content update
         public_books = await public_db_repo.select_all_books()
         if public_books:
-            updated = cdn_repo.get_sharing_links_from_objects(list_of_objects=public_books, type_='material')
+            updated = cdn_repo.get_sharing_links_from_objects(list_of_objects=public_books)
             await public_db_repo.update_book_links(book=updated)
 
-        public_theory_images = await public_db_repo.select_all_presentation_parts(presentation='theory', media_type='image')
+        """
+        NEW
+        """
+
+        public_video = await public_db_repo.select_all_video()
+        if public_video:
+            updated = cdn_repo.get_sharing_links_from_objects(list_of_objects=public_video)
+            await public_db_repo.update_video_links(video=updated)
+
+        public_game = await public_db_repo.select_all_game()
+        if public_game:
+            updated = cdn_repo.get_sharing_links_from_objects(list_of_objects=public_game)
+            await public_db_repo.update_game_links(game=updated)
+
+        public_quiz = await public_db_repo.select_all_quiz()
+        if public_quiz:
+            updated = cdn_repo.get_sharing_links_from_objects(list_of_objects=public_quiz)
+            await public_db_repo.update_quiz_links(quiz=updated)
+        
+        """
+        END NEW
+        """
+
+        public_theory_images = await public_db_repo.select_all_presentation_parts(presentation=ContentType.THEORY, media_type=ContentType.IMAGE)
         if public_theory_images:
-            updated = cdn_repo.get_sharing_links_from_objects(list_of_objects=public_theory_images, type_='parts')
-            await public_db_repo.update_presentation_part_links(prats=updated, presentation='theory', media_type='image')
+            updated = cdn_repo.get_sharing_links_from_objects(list_of_objects=public_theory_images)
+            await public_db_repo.update_presentation_part_links(prats=updated, presentation=ContentType.THEORY, media_type=ContentType.IMAGE)
 
-        public_theory_audio = await public_db_repo.select_all_presentation_parts(presentation='theory', media_type='audio')
+        public_theory_audio = await public_db_repo.select_all_presentation_parts(presentation=ContentType.THEORY, media_type=ContentType.AUDIO)
         if public_theory_audio:
-            updated = cdn_repo.get_sharing_links_from_objects(list_of_objects=public_theory_audio, type_='parts')
-            await public_db_repo.update_presentation_part_links(prats=updated, presentation='theory', media_type='audio')
+            updated = cdn_repo.get_sharing_links_from_objects(list_of_objects=public_theory_audio)
+            await public_db_repo.update_presentation_part_links(prats=updated, presentation=ContentType.THEORY, media_type=ContentType.AUDIO)
     
-        public_practice_images = await public_db_repo.select_all_presentation_parts(presentation='practice', media_type='image')
+        public_practice_images = await public_db_repo.select_all_presentation_parts(presentation=ContentType.PRACTICE, media_type=ContentType.IMAGE)
         if public_practice_images:
-            updated = cdn_repo.get_sharing_links_from_objects(list_of_objects=public_practice_images, type_='parts')
-            await public_db_repo.update_presentation_part_links(prats=updated, presentation='practice', media_type='image')
+            updated = cdn_repo.get_sharing_links_from_objects(list_of_objects=public_practice_images)
+            await public_db_repo.update_presentation_part_links(prats=updated, presentation=ContentType.PRACTICE, media_type=ContentType.IMAGE)
 
-        public_practice_audio = await public_db_repo.select_all_presentation_parts(presentation='practice', media_type='audio')
+        public_practice_audio = await public_db_repo.select_all_presentation_parts(presentation=ContentType.PRACTICE, media_type=ContentType.AUDIO)
         if public_practice_audio:
-            updated = cdn_repo.get_sharing_links_from_objects(list_of_objects=public_practice_audio, type_='parts')
-            await public_db_repo.update_presentation_part_links(prats=updated, presentation='practice', media_type='audio')
+            updated = cdn_repo.get_sharing_links_from_objects(list_of_objects=public_practice_audio)
+            await public_db_repo.update_presentation_part_links(prats=updated, presentation=ContentType.PRACTICE, media_type=ContentType.AUDIO)
 
         # about content update
         team_members = await about_db_repo.select_all_team_members()
         if team_members:
-            updated = cdn_repo.get_sharing_links_from_objects(list_of_objects=team_members, type_='team')
+            updated = cdn_repo.get_sharing_links_from_objects(list_of_objects=team_members)
             await about_db_repo.update_team_member_photos(photos=updated)
 
         # news content update
         news = await news_db_repo.select_all_news()
         if news:
-            updated = cdn_repo.get_sharing_links_from_objects(list_of_objects=news, type_='news')
+            updated = cdn_repo.get_sharing_links_from_objects(list_of_objects=news)
             await news_db_repo.update_news_links(news=updated)
 
         news_images = await news_db_repo.select_all_news_images()
         if news_images:
-            updated = cdn_repo.get_sharing_links_from_objects(list_of_objects=news_images, type_='news')
+            updated = cdn_repo.get_sharing_links_from_objects(list_of_objects=news_images)
             await news_db_repo.update_images_links(images=updated)
 
     background_tasks.add_task(update)

@@ -10,7 +10,7 @@ from app.api.dependencies.cdn import get_cdn_repository
 
 from app.api.dependencies.updating import update_sharing_links_function
 
-from app.api.dependencies.auth import get_user_from_token, is_superuser, is_verified
+from app.api.dependencies.auth import allowed_or_denied 
 
 
 # import update models
@@ -31,7 +31,7 @@ from app.models.private import GameInDB
 from app.models.private import BookInDB
 from app.models.private import PresentationMasterInDB
 
-from app.models.user import UserInDB
+from app.db.repositories.types import ContentType
 
 router = APIRouter()
 
@@ -49,18 +49,11 @@ async def update_private_grade(
     updated: UpdateStructureModel = Body(...),
     db_repo: PrivateDBRepository = Depends(get_db_repository(PrivateDBRepository)),
     cdn_repo: PrivateYandexCDNRepository = Depends(get_cdn_repository(PrivateYandexCDNRepository)),
-    user: UserInDB = Depends(get_user_from_token),
-    is_superuser = Depends(is_superuser),
-    is_verified = Depends(is_verified),
+    allowed: bool = Depends(allowed_or_denied),
     ) -> GradeInDB:
-    if not user.is_superuser:
-        raise HTTPException(status_code=HTTP_403_FORBIDDEN, detail="Not superuser!")
-    if not is_verified:
-        raise HTTPException(status_code=HTTP_403_FORBIDDEN, detail="Email not verified!")
 
-    background_url = None
-    if updated.background_key:
-        background_url = cdn_repo.get_background_url(key=updated.background_key, remove_extra=True)
+    if updated.object_key:
+        background_url = cdn_repo.get_background_url(object_key=updated.object_key)
 
     response = await db_repo.update_grade(updated=updated, background_url=background_url)
     return response
@@ -70,18 +63,11 @@ async def update_private_subject(
     updated: UpdateStructureModel = Body(...),
     db_repo: PrivateDBRepository = Depends(get_db_repository(PrivateDBRepository)),
     cdn_repo: PrivateYandexCDNRepository = Depends(get_cdn_repository(PrivateYandexCDNRepository)),
-    user: UserInDB = Depends(get_user_from_token),
-    is_superuser = Depends(is_superuser),
-    is_verified = Depends(is_verified),
+    allowed: bool = Depends(allowed_or_denied),
     ) -> SubjectInDB:
-    if not user.is_superuser:
-        raise HTTPException(status_code=HTTP_403_FORBIDDEN, detail="Not superuser!")
-    if not is_verified:
-        raise HTTPException(status_code=HTTP_403_FORBIDDEN, detail="Email not verified!")
 
-    background_url = None
-    if updated.background_key:
-        background_url = cdn_repo.get_background_url(key=updated.background_key, remove_extra=True)
+    if updated.object_key:
+        background_url = cdn_repo.get_background_url(object_key=updated.object_key)
 
     response = await db_repo.update_subject(updated=updated, background_url=background_url)
     return response
@@ -91,18 +77,11 @@ async def update_private_branch(
     updated: UpdateStructureModel = Body(...),
     db_repo: PrivateDBRepository = Depends(get_db_repository(PrivateDBRepository)),
     cdn_repo: PrivateYandexCDNRepository = Depends(get_cdn_repository(PrivateYandexCDNRepository)),
-    user: UserInDB = Depends(get_user_from_token),
-    is_superuser = Depends(is_superuser),
-    is_verified = Depends(is_verified),
+    allowed: bool = Depends(allowed_or_denied),
     ) -> BranchInDB:
-    if not user.is_superuser:
-        raise HTTPException(status_code=HTTP_403_FORBIDDEN, detail="Not superuser!")
-    if not is_verified:
-        raise HTTPException(status_code=HTTP_403_FORBIDDEN, detail="Email not verified!")
 
-    background_url = None
-    if updated.background_key:
-        background_url = cdn_repo.get_background_url(key=updated.background_key, remove_extra=True)
+    if updated.object_key:
+        background_url = cdn_repo.get_background_url(object_key=updated.object_key)
 
     response = await db_repo.update_branch(updated=updated, background_url=background_url)
     return response
@@ -112,18 +91,11 @@ async def update_private_lecture(
     updated: UpdateLectureModel = Body(...),
     db_repo: PrivateDBRepository = Depends(get_db_repository(PrivateDBRepository)),
     cdn_repo: PrivateYandexCDNRepository = Depends(get_cdn_repository(PrivateYandexCDNRepository)),
-    user: UserInDB = Depends(get_user_from_token),
-    is_superuser = Depends(is_superuser),
-    is_verified = Depends(is_verified),
+    allowed: bool = Depends(allowed_or_denied),
     ) -> LectureInDB:
-    if not user.is_superuser:
-        raise HTTPException(status_code=HTTP_403_FORBIDDEN, detail="Not superuser!")
-    if not is_verified:
-        raise HTTPException(status_code=HTTP_403_FORBIDDEN, detail="Email not verified!")
 
-    background_url = None
-    if updated.background_key:
-        background_url = cdn_repo.get_background_url(key=updated.background_key, remove_extra=True)
+    if updated.object_key:
+        background_url = cdn_repo.get_background_url(object_key=updated.object_key)
 
     response = await db_repo.update_lecture(updated=updated, background_url=background_url)
     return response
@@ -132,14 +104,8 @@ async def update_private_lecture(
 async def update_private_theory(
     updated: UpdateVideoModel = Body(...),
     db_repo: PrivateDBRepository = Depends(get_db_repository(PrivateDBRepository)),
-    user: UserInDB = Depends(get_user_from_token),
-    is_superuser = Depends(is_superuser),
-    is_verified = Depends(is_verified),
+    allowed: bool = Depends(allowed_or_denied),
     ) -> VideoInDB:
-    if not user.is_superuser:
-        raise HTTPException(status_code=HTTP_403_FORBIDDEN, detail="Not superuser!")
-    if not is_verified:
-        raise HTTPException(status_code=HTTP_403_FORBIDDEN, detail="Email not verified!")
 
     if updated.url:
         updated.url = parse_youtube_link(updated.url)
@@ -151,64 +117,38 @@ async def update_private_theory(
 async def update_private_game(
     updated: UpdateGameModel = Body(...),
     db_repo: PrivateDBRepository = Depends(get_db_repository(PrivateDBRepository)),
-    user: UserInDB = Depends(get_user_from_token),
-    is_superuser = Depends(is_superuser),
-    is_verified = Depends(is_verified),
+    allowed: bool = Depends(allowed_or_denied),
     ) -> GameInDB:
-    if not user.is_superuser:
-        raise HTTPException(status_code=HTTP_403_FORBIDDEN, detail="Not superuser!")
-    if not is_verified:
-        raise HTTPException(status_code=HTTP_403_FORBIDDEN, detail="Email not verified!")
 
     response = await db_repo.update_game(updated=updated)
     return response
 
-@router.put("/book")
+@router.put("/book", response_model=BookInDB, name="private:put-book", status_code=HTTP_200_OK)
 async def update_private_book(
     updated: UpdateBookModel = Body(...),
     db_repo: PrivateDBRepository = Depends(get_db_repository(PrivateDBRepository)),
-    user: UserInDB = Depends(get_user_from_token),
-    is_superuser = Depends(is_superuser),
-    is_verified = Depends(is_verified),
+    allowed: bool = Depends(allowed_or_denied),
     ) -> BookInDB:
-    if not user.is_superuser:
-        raise HTTPException(status_code=HTTP_403_FORBIDDEN, detail="Not superuser!")
-    if not is_verified:
-        raise HTTPException(status_code=HTTP_403_FORBIDDEN, detail="Email not verified!")
 
     response = await db_repo.update_book(updated=updated)
     return response
 
-
-@router.put("/practice")
+@router.put("/practice", response_model=PresentationMasterInDB, name="private:put-practice", status_code=HTTP_200_OK)
 async def update_private_practice(
     updated: UpdatePresentationModel = Body(...),
     db_repo: PrivateDBRepository = Depends(get_db_repository(PrivateDBRepository)),
-    user: UserInDB = Depends(get_user_from_token),
-    is_superuser = Depends(is_superuser),
-    is_verified = Depends(is_verified),
+    allowed: bool = Depends(allowed_or_denied),
     ) -> PresentationMasterInDB:
-    if not user.is_superuser:
-        raise HTTPException(status_code=HTTP_403_FORBIDDEN, detail="Not superuser!")
-    if not is_verified:
-        raise HTTPException(status_code=HTTP_403_FORBIDDEN, detail="Email not verified!")
 
-    response = await db_repo.update_presentation(updated=updated, presentation="practice")
+    response = await db_repo.update_presentation(updated=updated, presentation=ContentType.PRACTICE)
     return response
 
-@router.put("/theory")
+@router.put("/theory", response_model=PresentationMasterInDB, name="private:put-theory", status_code=HTTP_200_OK)
 async def update_private_thoery(
     updated: UpdatePresentationModel = Body(...),
     db_repo: PrivateDBRepository = Depends(get_db_repository(PrivateDBRepository)),
-    user: UserInDB = Depends(get_user_from_token),
-    is_superuser = Depends(is_superuser),
-    is_verified = Depends(is_verified),
+    allowed: bool = Depends(allowed_or_denied),
     ) -> PresentationMasterInDB:
-    if not user.is_superuser:
-        raise HTTPException(status_code=HTTP_403_FORBIDDEN, detail="Not superuser!")
-    if not is_verified:
-        raise HTTPException(status_code=HTTP_403_FORBIDDEN, detail="Email not verified!")
 
-
-    response = await db_repo.update_presentation(updated=updated, presentation="theory")
+    response = await db_repo.update_presentation(updated=updated, presentation=ContentType.THEORY)
     return response

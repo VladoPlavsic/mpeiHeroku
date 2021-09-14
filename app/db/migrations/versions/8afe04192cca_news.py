@@ -23,7 +23,7 @@ def create_tables() -> None:
         sa.Column('short_desc', sa.Text, nullable=False),
         sa.Column('content', sa.Text, nullable=False),
         sa.Column('url', sa.Text, nullable=False),
-        sa.Column('cloud_key', sa.Text, nullable=False),
+        sa.Column('object_key', sa.Text, nullable=False),
         sa.Column('preview_image_url', sa.Text, nullable=False),
         sa.UniqueConstraint('date', 'url'),
         schema='news'
@@ -33,7 +33,7 @@ def create_tables() -> None:
         'news_images',
         sa.Column('fk', sa.Integer, nullable=False),
         sa.Column('order', sa.Integer, nullable=False),
-        sa.Column('cloud_key', sa.Text, nullable=False),
+        sa.Column('object_key', sa.Text, nullable=False),
         sa.Column('url', sa.Text, nullable=False),
         sa.UniqueConstraint('fk', 'order'),
         sa.ForeignKeyConstraint(['fk'], ['news.news.id'], onupdate='CASCADE', ondelete='CASCADE'),
@@ -43,24 +43,24 @@ def create_tables() -> None:
 def create_news_functions() -> None:
     # insert news master
     op.execute("""
-    CREATE OR REPLACE FUNCTION news.insert_news_master(i_date TEXT, i_title TEXT, i_short_desc TEXT , i_content TEXT, i_url TEXT, i_cloud_key TEXT, i_preview_image_url TEXT)
-    RETURNS TABLE (id int, date text, title text, short_desc text, content text, url text, cloud_key text, preview_image_url text)
+    CREATE OR REPLACE FUNCTION news.insert_news_master(i_date TEXT, i_title TEXT, i_short_desc TEXT , i_content TEXT, i_url TEXT, i_object_key TEXT, i_preview_image_url TEXT)
+    RETURNS TABLE (id int, date text, title text, short_desc text, content text, url text, object_key text, preview_image_url text)
     AS $$
     DECLARE 
         inserted_id int;
     BEGIN
-        INSERT INTO news.news (date, title, short_desc, content, url, cloud_key, preview_image_url)
-        VALUES (i_date, i_title, i_short_desc, i_content, i_url, i_cloud_key, i_preview_image_url) RETURNING news.news.id INTO inserted_id;
+        INSERT INTO news.news (date, title, short_desc, content, url, object_key, preview_image_url)
+        VALUES (i_date, i_title, i_short_desc, i_content, i_url, i_object_key, i_preview_image_url) RETURNING news.news.id INTO inserted_id;
         RETURN QUERY (SELECT * FROM news.news WHERE news.news.id = inserted_id);
     END $$ LANGUAGE plpgsql
     """)
     # insert news slave
     op.execute("""
     CREATE OR REPLACE FUNCTION news.insert_news_slave(i_fk int, i_orders int[], i_keys text[], i_urls text[])
-    RETURNS TABLE (fk int, "order" int, cloud_key text, url text)
+    RETURNS TABLE (fk int, "order" int, object_key text, url text)
     AS $$ 
     BEGIN
-        INSERT INTO news.news_images (fk, "order", cloud_key, url)
+        INSERT INTO news.news_images (fk, "order", object_key, url)
         SELECT i_fk, unnest(i_orders), unnest(i_keys), unnest(i_urls);
         RETURN QUERY (SELECT * FROM news.news_images WHERE news.news_images.fk = i_fk);
     END $$ LANGUAGE plpgsql;
@@ -69,7 +69,7 @@ def create_news_functions() -> None:
     # select news master
     op.execute("""
     CREATE OR REPLACE FUNCTION news.select_master_news(i_offset int, i_limit int)
-    RETURNS TABLE (id int, date text, title text, short_desc text, content text, url text, cloud_key text, preview_image_url text)
+    RETURNS TABLE (id int, date text, title text, short_desc text, content text, url text, object_key text, preview_image_url text)
     AS $$
     BEGIN
         RETURN QUERY (SELECT * FROM news.news ORDER BY date DESC LIMIT i_limit OFFSET i_offset);
@@ -79,7 +79,7 @@ def create_news_functions() -> None:
     # select news by unique key (url + date)
     op.execute("""
     CREATE OR REPLACE FUNCTION news.select_news_by_unique_key(i_date text, i_url text)
-    RETURNS TABLE (id int, date text, title text, short_desc text, content text, url text, cloud_key text, preview_image_url text)
+    RETURNS TABLE (id int, date text, title text, short_desc text, content text, url text, object_key text, preview_image_url text)
     AS $$
     BEGIN
         RETURN QUERY (SELECT * FROM news.news WHERE news.news.url = i_url AND news.news.date = i_date);
@@ -88,31 +88,29 @@ def create_news_functions() -> None:
     # select news slave
     op.execute("""
     CREATE OR REPLACE FUNCTION news.select_slave_news(i_fk int)
-    RETURNS TABLE (fk int, "order" int, cloud_key text, url text)
+    RETURNS TABLE (fk int, "order" int, object_key text, url text)
     AS $$
     BEGIN
         RETURN QUERY (SELECT * FROM news.news_images WHERE news.news_images.fk = i_fk ORDER BY "order");
     END $$ LANGUAGE plpgsql;
     """)
   
-
-
     # select all news master for updating
     op.execute("""
     CREATE OR REPLACE FUNCTION news.select_all_master_news()
-    RETURNS TABLE (id int, cloud_key text)
+    RETURNS TABLE (id int, object_key text)
     AS $$
     BEGIN 
-        RETURN QUERY (SELECT news.news.id, news.news.cloud_key FROM news.news);
+        RETURN QUERY (SELECT news.news.id, news.news.object_key FROM news.news);
     END $$ LANGUAGE plpgsql;
     """)
     # select all news slaves for updating
     op.execute("""
     CREATE OR REPLACE FUNCTION news.select_all_slave_news()
-    RETURNS TABLE ("order" int, cloud_key text)
+    RETURNS TABLE ("order" int, object_key text)
     AS $$
     BEGIN
-        RETURN QUERY (SELECT news.news_images."order", news.news_images.cloud_key FROM news.news_images);
+        RETURN QUERY (SELECT news.news_images."order", news.news_images.object_key FROM news.news_images);
     END $$ LANGUAGE plpgsql;
     """)
 
@@ -121,39 +119,39 @@ def create_news_functions() -> None:
     CREATE OR REPLACE FUNCTION news.delete_news(i_id int)
     RETURNS TEXT
     AS $$
-        DECLARE cloud_key TEXT;
+        DECLARE object_key TEXT;
     BEGIN
-        SELECT news.news.cloud_key INTO cloud_key FROM news.news WHERE news.news.id = i_id; 
+        SELECT news.news.object_key INTO object_key FROM news.news WHERE news.news.id = i_id; 
         DELETE FROM news.news WHERE id = i_id;
-        RETURN cloud_key;
+        RETURN object_key;
     END $$ LANGUAGE plpgsql
     """)
 
     # update news master links
     op.execute("""
-    CREATE OR REPLACE FUNCTION news.update_news_sharing_links(cloud_keys text[], preview_image_urls text[])
+    CREATE OR REPLACE FUNCTION news.update_news_sharing_links(object_keys text[], preview_image_urls text[])
     RETURNS VOID
     AS $$
     BEGIN
-    FOR index IN 1 .. array_upper(cloud_keys, 1)
+    FOR index IN 1 .. array_upper(object_keys, 1)
     LOOP 
         UPDATE news.news SET
         preview_image_url = preview_image_urls[index]
-        WHERE cloud_key = cloud_keys[index];
+        WHERE object_key = object_keys[index];
     END LOOP;
     END $$ LANGUAGE plpgsql
     """)
     # update news slave links
     op.execute("""
-    CREATE OR REPLACE FUNCTION news.update_news_images_sharing_links(cloud_keys text[], urls text[])
+    CREATE OR REPLACE FUNCTION news.update_news_images_sharing_links(object_keys text[], urls text[])
     RETURNS VOID
     AS $$
     BEGIN
-    FOR index IN 1 .. array_upper(cloud_keys, 1)
+    FOR index IN 1 .. array_upper(object_keys, 1)
     LOOP 
         UPDATE news.news_images SET
         url = urls[index]
-        WHERE cloud_key = cloud_keys[index];
+        WHERE object_key = object_keys[index];
     END LOOP;
     END $$ LANGUAGE plpgsql;
     """)
@@ -169,8 +167,8 @@ def create_news_functions() -> None:
 
     # update news metadata
     op.execute("""
-    CREATE OR REPLACE FUNCTION news.update_news_metadata(i_id INT, i_date TEXT, i_title TEXT, i_short_desc TEXT , i_content TEXT, i_url TEXT, i_cloud_key TEXT, i_preview_image_url TEXT)
-    RETURNS TABLE (id int, date text, title text, short_desc text, content text, url text, cloud_key text, preview_image_url text)
+    CREATE OR REPLACE FUNCTION news.update_news_metadata(i_id INT, i_date TEXT, i_title TEXT, i_short_desc TEXT , i_content TEXT, i_url TEXT, i_object_key TEXT, i_preview_image_url TEXT)
+    RETURNS TABLE (id int, date text, title text, short_desc text, content text, url text, object_key text, preview_image_url text)
     AS $$
     BEGIN
 
@@ -180,11 +178,25 @@ def create_news_functions() -> None:
             short_desc = COALESCE(i_short_desc, news.news.short_desc),
             content = COALESCE(i_content, news.news.content),
             url = COALESCE(i_url, news.news.url),
-            cloud_key = COALESCE(i_cloud_key, news.news.cloud_key),
+            object_key = COALESCE(i_object_key, news.news.object_key),
             preview_image_url = COALESCE(i_preview_image_url, news.news.preview_image_url)
         WHERE news.news.id = i_id;
         RETURN QUERY (SELECT * FROM news.news WHERE news.news.id = i_id);
 
+    END $$ LANGUAGE plpgsql;
+    """)
+
+    # CHECK IF NEWS CAN BE CREATED
+    op.execute("""
+    CREATE OR REPLACE FUNCTION news.check_if_news_can_be_created(i_date TEXT, i_url TEXT)
+    RETURNS BOOLEAN
+    AS $$
+    DECLARE
+        yes BOOLEAN;
+    BEGIN
+        SELECT COUNT(*)::int::bool FROM news.news INTO yes WHERE date = i_date AND url = i_url;
+        yes = NOT yes;
+        RETURN yes;
     END $$ LANGUAGE plpgsql;
     """)
 
@@ -207,6 +219,7 @@ def drop_functions() -> None:
         'get_news_count',
         'update_news_metadata',
         'select_news_by_unique_key',
+        'check_if_news_can_be_created',
     ]
 
     for function in functions:

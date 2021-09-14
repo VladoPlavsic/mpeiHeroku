@@ -18,21 +18,14 @@ async def get_user_from_token(
     token: str,
     user_repo: UsersDBRepository = Depends(get_db_repository(UsersDBRepository)),
     ) -> Optional[UserInDB]:
-    '''
-        Takes in JWT token 
-        Returns UserInDB or raises 401 if: token expired, not valid token
-    '''
+    """Takes in JWT token. Returns UserInDB or raises 401 if token expired or not valid"""
     try:
-        email = auth_service.get_user_from_token(token=token, secret_key=str(SECRET_KEY))
-        user = await user_repo.get_user_by_email(email=email)
+        user = auth_service.get_user_from_token(token=token, secret_key=str(SECRET_KEY))
     except Exception as e:
         raise e
 
     if not user:
         raise HTTPException(status_code=404, detail="No user found!")
-
-    if user.jwt != token:
-        raise HTTPException(status_code=401, detail="Session expired.")
 
     return user
 
@@ -48,24 +41,20 @@ async def is_verified(
     user: UserInDB = Depends(get_user_from_token),
     ) -> bool:
 
+    if not user.email_verified:
+        raise HTTPException(status_code=401, detail="Email not verified!")
+
     return user.email_verified
 
-async def get_current_active_user(current_user: UserInDB = Depends(get_user_from_token)) -> Optional[UserInDB]:
-    if not current_user:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="No authenticated user.",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-    if not current_user.is_active:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Not an active user.",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-
-    return current_user
-
+async def allowed_or_denied(
+    is_superuser = Depends(is_superuser),
+    is_verified = Depends(is_verified),
+    ) -> bool:
+    """If user is not superuser, or his email is not verified raise Exception, otherwise return True"""
+    if not is_superuser:
+        raise HTTPException(status_code=HTTP_403_FORBIDDEN, detail="Not superuser!")
+    
+    return True
 
 def generate_confirmation_code() -> str:
     from random import randint

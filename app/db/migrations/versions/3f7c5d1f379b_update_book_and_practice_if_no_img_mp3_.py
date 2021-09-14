@@ -17,14 +17,14 @@ def create_update_s3_content_without_updating_s3_functions() -> None:
     # book
     op.execute("""
     CREATE OR REPLACE FUNCTION private.update_book_metadata(i_id int, i_name_ru varchar(20), i_description text)
-        RETURNS TABLE (id int, name_ru varchar(20), description text, url text, key text)
+        RETURNS TABLE (id int, name_ru varchar(20), description text, url text, object_key text)
         AS $$
         BEGIN 
         UPDATE private.book SET
             name_ru = COALESCE(i_name_ru, private.book.name_ru),
             description = COALESCE(i_description, private.book.description)
         WHERE private.book.fk = i_id;
-        RETURN QUERY (SELECT fk, private.book.name_ru, private.book.description, private.book.url, private.book.key FROM private.book WHERE private.book.fk = i_id);
+        RETURN QUERY (SELECT fk, private.book.name_ru, private.book.description, private.book.url, private.book.object_key FROM private.book WHERE private.book.fk = i_id);
         END $$ LANGUAGE plpgsql;
     """)
 

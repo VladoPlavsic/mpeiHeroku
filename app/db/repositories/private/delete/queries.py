@@ -30,14 +30,18 @@ def delete_video_query(id) -> str:
     return \
         f"SELECT private.delete_video_by_id({id}) AS key"
 
-def delete_quiz_query(id) -> str:
+def delete_quiz_query(fk) -> str:
+    return \
+        f"SELECT private.delete_all_quiz({fk}) AS key"
+
+def delete_quiz_question_query(id) -> str:
     return \
         f"SELECT private.delete_quiz_by_id({id}) AS key"
 
 # we don't need to return anything from these
 def delete_game_query(id) -> str:
     return \
-        f"SELECT private.delete_game_by_id({id})"
+        f"SELECT private.delete_game_by_id({id}) AS key"
 
 # Subscription plans
 def delete_available_grade_plans_query(id: int) -> str:

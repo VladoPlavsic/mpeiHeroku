@@ -1,6 +1,6 @@
 from typing import List
-from fastapi import APIRouter, HTTPException
-from fastapi import Depends, Body
+from fastapi import APIRouter
+from fastapi import Depends
 from starlette.status import HTTP_200_OK
 
 from app.api.dependencies.database import get_db_repository
@@ -10,7 +10,6 @@ from app.db.repositories.news.news import NewsDBRepository
 from app.models.news import NewsInDBModel, NewsResponseModel
 from app.models.news import NewsPreviewInDBModel
 
-
 router = APIRouter()
 
 @router.get("/get/count")
@@ -19,7 +18,6 @@ async def get_news_count(
     ) -> int:
 
     return await db_repo.get_news_count()
-
 
 @router.get("/get/news/preview", response_model=NewsResponseModel, name="news:get-news", status_code=HTTP_200_OK)
 async def get_news_preview(

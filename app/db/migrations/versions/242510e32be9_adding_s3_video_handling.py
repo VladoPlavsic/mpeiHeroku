@@ -18,10 +18,10 @@ def fix_updating_video_keys_functions() -> None:
     op.execute("DROP FUNCTION private.select_all_video_keys()")
     op.execute("""
     CREATE OR REPLACE FUNCTION private.select_all_video_keys()
-        RETURNS TABLE (id int, key text)
+        RETURNS TABLE (id int, object_key text)
         AS $$
         BEGIN
-        RETURN QUERY (SELECT private.video.fk, private.video.key FROM private.video);
+        RETURN QUERY (SELECT private.video.fk, private.video.object_key FROM private.video);
         END $$ LANGUAGE plpgsql;
     """)
 
@@ -35,7 +35,7 @@ def fix_updating_video_keys_functions() -> None:
         LOOP
             UPDATE private.video SET
             url = $2[index]
-            WHERE key = $1[index];
+            WHERE object_key = $1[index];
         END LOOP;
         END $$ LANGUAGE plpgsql;
     """)

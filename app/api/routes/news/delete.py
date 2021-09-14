@@ -1,6 +1,6 @@
-from fastapi import APIRouter, HTTPException
-from fastapi import Depends, Body
-from starlette.status import HTTP_200_OK, HTTP_403_FORBIDDEN
+from fastapi import APIRouter
+from fastapi import Depends
+from starlette.status import HTTP_200_OK
 
 from app.api.dependencies.database import get_db_repository
 from app.db.repositories.news.news import NewsDBRepository
@@ -8,7 +8,7 @@ from app.db.repositories.news.news import NewsDBRepository
 from app.api.dependencies.cdn import get_cdn_repository
 from app.cdn.repositories.news.news import NewsYandexCDNRepository
 
-from app.api.dependencies.auth import is_superuser, is_verified
+from app.api.dependencies.auth import allowed_or_denied
 
 router = APIRouter()
 
@@ -17,16 +17,12 @@ async def create_news(
     id: int,
     db_repo: NewsDBRepository = Depends(get_db_repository(NewsDBRepository)),
     cdn_repo: NewsYandexCDNRepository = Depends(get_cdn_repository(NewsYandexCDNRepository)),
-    is_superuser = Depends(is_superuser),
-    is_verified = Depends(is_verified),
+    allowed: bool = Depends(allowed_or_denied),
     ) -> None:
 
-    if not is_superuser:
-        raise HTTPException(status_code=HTTP_403_FORBIDDEN, detail="Not superuser!")
-    if not is_verified:
-        raise HTTPException(status_code=HTTP_403_FORBIDDEN, detail="Email not verified!")
-
     deleted_key = await db_repo.delete_news(id=id)
+    if deleted_key:
+        cdn_repo.delete_folder_by_inner_key(inner_key=deleted_key)
 
-    cdn_repo.delete_folder_by_inner_key(key=deleted_key)
+    return None
 

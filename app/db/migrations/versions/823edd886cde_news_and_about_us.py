@@ -21,7 +21,7 @@ def create_table_for_our_team() -> None:
     sa.Column('role', sa.Text, nullable=False),
     sa.Column('profession', sa.Text, nullable=False),
     sa.Column('description', sa.Text, nullable=True),
-    sa.Column('photo_key', sa.Text, nullable=False),
+    sa.Column('object_key', sa.Text, nullable=False),
     sa.Column('photo_link', sa.Text, nullable=False),
     sa.UniqueConstraint('order'),
     schema='about'

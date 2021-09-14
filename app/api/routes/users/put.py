@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 from fastapi import Body, Depends, BackgroundTasks, HTTPException
 
-from app.api.dependencies.email import send_message
+from app.api.dependencies.email import send_message, create_reset_password_email
 
 from app.db.repositories.users.users import UsersDBRepository
 from app.api.dependencies.database import get_db_repository
@@ -92,32 +92,31 @@ async def request_password_recovery(
     user_repo: UsersDBRepository = Depends(get_db_repository(UsersDBRepository)),
     ) -> None:
 
-    # Create password recovery request and send recovery key to email 
+    # Create password recovery request and send recovery key to email
     # or return bad request (if email is not valid)
     response = await user_repo.request_reset_password(email=email)
     if not response:
         raise HTTPException(status_code=404, detail="User not found for given email")
         
     # send recovery email
-    background_task.add_task(send_message, subject="Password recovery", message_text=f"Your recovery code is {response}", to=email)
+    background_task.add_task(send_message, subject="Восстановление пароля", message_text=create_reset_password_email(recovery_hash=response), to=email)
     return None
 
 @router.put("/confirm/password/recovery")
 async def confirm_password_recovery(
     recovery_key: str,
-    email: str = Body(..., embed=True),
     user_repo: UsersDBRepository = Depends(get_db_repository(UsersDBRepository)),
     ) -> None:
 
-    response = await user_repo.confirm_reset_password(email=email, recovery_key=recovery_key)
+    response = await user_repo.confirm_reset_password(recovery_key=recovery_key)
 
     if not response:
         raise HTTPException(status_code=400, detail="Ooops! Something went wrong. Please try creating new recovery request!")
 
     return response
 
-@router.put("/recover/passwrd")
-async def recover_passwrd(
+@router.put("/recover/password")
+async def recover_password(
     recovery_hash: str,
     password: str = Body(..., embed=True),
     user_repo: UsersDBRepository = Depends(get_db_repository(UsersDBRepository)),

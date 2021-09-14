@@ -17,12 +17,12 @@ def create_stored_procedures_insert() -> None:
     # grades insert function
     op.execute("""
     CREATE OR REPLACE FUNCTION private.insert_grade(varchar(20), varchar(20), text, text)
-        RETURNS TABLE (id int, name_en varchar(20), name_ru varchar(20), background text, background_key text)
+        RETURNS TABLE (id int, name_en varchar(20), name_ru varchar(20), background text, object_key text)
         AS $$
         DECLARE
         inserted_id int;
         BEGIN
-        INSERT INTO private.grade (name_en, name_ru, background_key, background) VALUES ($1, $2, $3, $4) 
+        INSERT INTO private.grade (name_en, name_ru, object_key, background) VALUES ($1, $2, $3, $4) 
         RETURNING private.grade.id INTO inserted_id;
         RETURN QUERY (SELECT * FROM private.grade WHERE private.grade.id = inserted_id);
         END $$ LANGUAGE plpgsql;
@@ -31,12 +31,12 @@ def create_stored_procedures_insert() -> None:
     # subject insert function
     op.execute("""
     CREATE OR REPLACE FUNCTION private.insert_subject(int, varchar(20), varchar(20), text, text)
-        RETURNS TABLE (id int, fk int, name_en varchar(20), name_ru varchar(20), background text, background_key text)
+        RETURNS TABLE (id int, fk int, name_en varchar(20), name_ru varchar(20), background text, object_key text)
         AS $$
         DECLARE
         inserted_id int;
         BEGIN
-        INSERT INTO private.subject (fk, name_en, name_ru, background_key, background) VALUES ($1, $2, $3, $4, $5) RETURNING private.subject.id INTO inserted_id;
+        INSERT INTO private.subject (fk, name_en, name_ru, object_key, background) VALUES ($1, $2, $3, $4, $5) RETURNING private.subject.id INTO inserted_id;
         RETURN QUERY (SELECT * FROM private.subject WHERE private.subject.id = inserted_id);
         END $$ LANGUAGE plpgsql;
     """)
@@ -44,12 +44,12 @@ def create_stored_procedures_insert() -> None:
     # branch insert function
     op.execute("""
     CREATE OR REPLACE FUNCTION private.insert_branch(int, varchar(20), varchar(20), text, text)
-        RETURNS TABLE (id int, fk int, name_en varchar(20), name_ru varchar(20), background text, background_key text)
+        RETURNS TABLE (id int, fk int, name_en varchar(20), name_ru varchar(20), background text, object_key text)
         AS $$
         DECLARE
         inserted_id int;
         BEGIN
-        INSERT INTO private.branch (fk, name_en, name_ru, background_key, background) VALUES ($1, $2, $3, $4, $5) RETURNING private.branch.id INTO inserted_id;
+        INSERT INTO private.branch (fk, name_en, name_ru, object_key, background) VALUES ($1, $2, $3, $4, $5) RETURNING private.branch.id INTO inserted_id;
         RETURN QUERY (SELECT * FROM private.branch WHERE private.branch.id = inserted_id);
         END $$ LANGUAGE plpgsql;
     """)
@@ -57,12 +57,12 @@ def create_stored_procedures_insert() -> None:
     # lecture insert function
     op.execute("""
     CREATE OR REPLACE FUNCTION private.insert_lecture(int, varchar(20), varchar(20), text, text, text)
-        RETURNS TABLE (id int, fk int, name_en varchar(20), name_ru varchar(20), description text, background text, background_key text)
+        RETURNS TABLE (id int, fk int, name_en varchar(20), name_ru varchar(20), description text, background text, object_key text)
         AS $$
         DECLARE
         inserted_id int;
         BEGIN
-        INSERT INTO private.lecture (fk, name_en, name_ru, description, background_key, background) VALUES ($1, $2, $3, $4, $5, $6) RETURNING private.lecture.id INTO inserted_id;
+        INSERT INTO private.lecture (fk, name_en, name_ru, description, object_key, background) VALUES ($1, $2, $3, $4, $5, $6) RETURNING private.lecture.id INTO inserted_id;
         RETURN QUERY (SELECT * FROM private.lecture WHERE private.lecture.id = inserted_id);
         END $$ LANGUAGE plpgsql;
     """)
@@ -70,12 +70,12 @@ def create_stored_procedures_insert() -> None:
     # video insert function
     op.execute("""
     CREATE OR REPLACE FUNCTION private.insert_video(int, varchar(20), text, text, text)
-        RETURNS TABLE (id int, url text, name_ru varchar(20), description text, key text)
+        RETURNS TABLE (id int, url text, name_ru varchar(20), description text, object_key text)
         AS $$
         DECLARE
         inserted_id int;
         BEGIN
-        INSERT INTO private.video (fk, name_ru, description, key, url) VALUES ($1, $2, $3, $4, $5) RETURNING private.video.fk INTO inserted_id;
+        INSERT INTO private.video (fk, name_ru, description, object_key, url) VALUES ($1, $2, $3, $4, $5) RETURNING private.video.fk INTO inserted_id;
         RETURN QUERY (SELECT * FROM private.video WHERE private.video.fk = inserted_id);
         END $$ LANGUAGE plpgsql;
     """)
@@ -83,25 +83,25 @@ def create_stored_procedures_insert() -> None:
     # book insert function
     op.execute("""
     CREATE OR REPLACE FUNCTION private.insert_book(int, varchar(20), text, text, text)
-        RETURNS TABLE (id int, url text, name_ru varchar(20), description text, key text)
+        RETURNS TABLE (id int, url text, name_ru varchar(20), description text, object_key text)
         AS $$
         DECLARE
         inserted_id int;
         BEGIN
-        INSERT INTO private.book (fk, name_ru, description, key, url) VALUES ($1, $2, $3, $4, $5) RETURNING private.book.fk INTO inserted_id;
+        INSERT INTO private.book (fk, name_ru, description, object_key, url) VALUES ($1, $2, $3, $4, $5) RETURNING private.book.fk INTO inserted_id;
         RETURN QUERY (SELECT * FROM private.book WHERE private.book.fk = inserted_id);
         END $$ LANGUAGE plpgsql;
     """)
 
     # game insert function
     op.execute("""
-    CREATE OR REPLACE FUNCTION private.insert_game(int, varchar(20), text, text)
+    CREATE OR REPLACE FUNCTION private.insert_game(int, varchar(20), text, text, text)
         RETURNS TABLE (id int, url text, name_ru varchar(20), description text)
         AS $$
         DECLARE
         inserted_id int;
         BEGIN
-        INSERT INTO private.game (fk, name_ru, description, url) VALUES ($1, $2, $3, $4) RETURNING private.game.fk INTO inserted_id;
+        INSERT INTO private.game (fk, name_ru, description, url, object_key) VALUES ($1, $2, $3, $4, $5) RETURNING private.game.fk INTO inserted_id;
         RETURN QUERY (SELECT * FROM private.game WHERE private.game.fk = inserted_id);
         END $$ LANGUAGE plpgsql;
     """)
@@ -109,70 +109,70 @@ def create_stored_procedures_insert() -> None:
     # theory insert function
     op.execute("""
     CREATE OR REPLACE FUNCTION private.insert_theory(int, varchar(20), text, text)
-        RETURNS TABLE (id int, name_ru varchar(20), description text, key text)
+        RETURNS TABLE (id int, name_ru varchar(20), description text, object_key text)
         AS $$
         DECLARE
         inserted_id int;
         BEGIN
-        INSERT INTO private.theory (fk, name_ru, description, key) VALUES ($1, $2, $3, $4) RETURNING private.theory.fk INTO inserted_id;
+        INSERT INTO private.theory (fk, name_ru, description, object_key) VALUES ($1, $2, $3, $4) RETURNING private.theory.fk INTO inserted_id;
         RETURN QUERY (SELECT * FROM private.theory WHERE private.theory.fk = inserted_id);
         END $$ LANGUAGE plpgsql;
     """)
     # theory images insert function
     op.execute("""
     CREATE OR REPLACE FUNCTION private.insert_theory_image(int[], int[], text[], text[])
-        RETURNS TABLE ("order" int, url text, key text)
+        RETURNS TABLE ("order" int, url text, object_key text)
         AS $$
         BEGIN
-        INSERT INTO private.theory_image (fk, "order", url, key)
+        INSERT INTO private.theory_image (fk, "order", url, object_key)
         SELECT unnest($1), unnest($2), unnest($3), unnest($4);
-        RETURN QUERY (SELECT private.theory_image."order", private.theory_image.url, private.theory_image.key FROM private.theory_image WHERE private.theory_image.fk = $1[1]);
+        RETURN QUERY (SELECT private.theory_image."order", private.theory_image.url, private.theory_image.object_key FROM private.theory_image WHERE private.theory_image.fk = $1[1]);
         END $$ LANGUAGE plpgsql;
     """)
     # theory audio insert function
     op.execute("""
     CREATE OR REPLACE FUNCTION private.insert_theory_audio(int[], int[], text[], text[])
-        RETURNS TABLE ("order" int, url text, key text)
+        RETURNS TABLE ("order" int, url text, object_key text)
         AS $$
         BEGIN
-        INSERT INTO private.theory_audio (fk, "order", url, key)
+        INSERT INTO private.theory_audio (fk, "order", url, object_key)
         SELECT unnest($1), unnest($2), unnest($3), unnest($4);
-        RETURN QUERY (SELECT private.theory_audio."order", private.theory_audio.url, private.theory_audio.key FROM private.theory_audio WHERE private.theory_audio.fk = $1[1]);
+        RETURN QUERY (SELECT private.theory_audio."order", private.theory_audio.url, private.theory_audio.object_key FROM private.theory_audio WHERE private.theory_audio.fk = $1[1]);
         END $$ LANGUAGE plpgsql;
     """)
 
     # practice insert function
     op.execute("""
     CREATE OR REPLACE FUNCTION private.insert_practice(int, varchar(20), text, text)
-        RETURNS TABLE (id int, name_ru varchar(20), description text, key text)
+        RETURNS TABLE (id int, name_ru varchar(20), description text, object_key text)
         AS $$
         DECLARE
         inserted_id int;
         BEGIN
-        INSERT INTO private.practice (fk, name_ru, description, key) VALUES ($1, $2, $3, $4) RETURNING private.practice.fk INTO inserted_id;
+        INSERT INTO private.practice (fk, name_ru, description, object_key) VALUES ($1, $2, $3, $4) RETURNING private.practice.fk INTO inserted_id;
         RETURN QUERY (SELECT * FROM private.practice WHERE private.practice.fk = inserted_id);
         END $$ LANGUAGE plpgsql;
     """)
     # practice images insert function
     op.execute("""
     CREATE OR REPLACE FUNCTION private.insert_practice_image(int[], int[], text[], text[])
-        RETURNS TABLE ("order" int, url text, key text)
+        RETURNS TABLE ("order" int, url text, object_key text)
         AS $$
         BEGIN
-        INSERT INTO private.practice_image (fk, "order", url, key)
+        INSERT INTO private.practice_image (fk, "order", url, object_key)
         SELECT unnest($1), unnest($2), unnest($3), unnest($4);
-        RETURN QUERY (SELECT private.practice_image."order", private.practice_image.url, private.practice_image.key FROM private.practice_image WHERE private.practice_image.fk = $1[1]);
+        RETURN QUERY (SELECT private.practice_image."order", private.practice_image.url, private.practice_image.object_key FROM private.practice_image WHERE private.practice_image.fk = $1[1]);
         END $$ LANGUAGE plpgsql;
     """)
     # practice audio insert function
     op.execute("""
     CREATE OR REPLACE FUNCTION private.insert_practice_audio(int[], int[], text[], text[])
-        RETURNS TABLE ("order" int, url text, key text)
+        RETURNS TABLE ("order" int, url text, object_key text)
         AS $$
         BEGIN
-        INSERT INTO private.practice_audio (fk, "order", url, key)
+        INSERT INTO private.practice_audio (fk, "order", url, object_key)
         SELECT unnest($1), unnest($2), unnest($3), unnest($4);
-        RETURN QUERY (SELECT private.practice_audio."order", private.practice_audio.url, private.practice_audio.key FROM private.practice_audio WHERE private.practice_audio.fk = $1[1]);
+        RETURN QUERY (SELECT private.practice_audio."order", private.practice_audio.url, private.practice_audio.object_key FROM private.practice_audio WHERE private.practice_audio.fk = $1[1]);
         END $$ LANGUAGE plpgsql;
     """)
 
@@ -184,7 +184,7 @@ def create_stored_procedures_delete() -> None:
         AS $$
         DECLARE key text;
         BEGIN
-        DELETE FROM private.grade WHERE private.grade.id = $1 RETURNING background_key INTO key;
+        DELETE FROM private.grade WHERE private.grade.id = $1 RETURNING object_key INTO key;
         RETURN key;
         END $$ LANGUAGE plpgsql;
     """)
@@ -195,7 +195,7 @@ def create_stored_procedures_delete() -> None:
         AS $$
         DECLARE key text;
         BEGIN
-        DELETE FROM private.subject WHERE private.subject.id = $1 RETURNING background_key INTO key;
+        DELETE FROM private.subject WHERE private.subject.id = $1 RETURNING object_key INTO key;
         RETURN key;
         END $$ LANGUAGE plpgsql;
     """)
@@ -206,7 +206,7 @@ def create_stored_procedures_delete() -> None:
         AS $$
         DECLARE key text;
         BEGIN
-        DELETE FROM private.branch WHERE private.branch.id = $1 RETURNING background_key INTO key;
+        DELETE FROM private.branch WHERE private.branch.id = $1 RETURNING object_key INTO key;
         RETURN key;
         END $$ LANGUAGE plpgsql;
     """)
@@ -217,7 +217,7 @@ def create_stored_procedures_delete() -> None:
         AS $$
         DECLARE key text;
         BEGIN
-        DELETE FROM private.lecture WHERE private.lecture.id = $1 RETURNING background_key INTO key;
+        DELETE FROM private.lecture WHERE private.lecture.id = $1 RETURNING object_key INTO key;
         RETURN key;
         END $$ LANGUAGE plpgsql;
     """)
@@ -228,7 +228,7 @@ def create_stored_procedures_delete() -> None:
         AS $$
         DECLARE key text;
         BEGIN
-        DELETE FROM private.theory WHERE private.theory.fk = $1 RETURNING private.theory.key INTO key;
+        DELETE FROM private.theory WHERE private.theory.fk = $1 RETURNING private.theory.object_key INTO key;
         RETURN key;
         END $$ LANGUAGE plpgsql;
     """)
@@ -239,7 +239,7 @@ def create_stored_procedures_delete() -> None:
         AS $$
         DECLARE key text;
         BEGIN
-        DELETE FROM private.practice WHERE private.practice.fk = $1 RETURNING private.practice.key INTO key;
+        DELETE FROM private.practice WHERE private.practice.fk = $1 RETURNING private.practice.object_key INTO key;
         RETURN key;
         END $$ LANGUAGE plpgsql;
     """)
@@ -250,7 +250,7 @@ def create_stored_procedures_delete() -> None:
         AS $$
         DECLARE key text;
         BEGIN
-        DELETE FROM private.book WHERE private.book.fk = $1 RETURNING private.book.key INTO key;
+        DELETE FROM private.book WHERE private.book.fk = $1 RETURNING private.book.object_key INTO key;
         RETURN key;
         END $$ LANGUAGE plpgsql;
     """)
@@ -261,17 +261,19 @@ def create_stored_procedures_delete() -> None:
         AS $$
         DECLARE key text;
         BEGIN
-        DELETE FROM private.video WHERE private.video.fk = $1 RETURNING private.video.key INTO key;
+        DELETE FROM private.video WHERE private.video.fk = $1 RETURNING private.video.object_key INTO key;
         RETURN key;
         END $$ LANGUAGE plpgsql;
     """)
     # game delete function
     op.execute("""
     CREATE OR REPLACE FUNCTION private.delete_game_by_id(int)
-        RETURNS VOID
+        RETURNS text
         AS $$
+        DECLARE key text;
         BEGIN
-        DELETE FROM private.game WHERE private.game.fk = $1;
+        DELETE FROM private.game WHERE private.game.fk = $1 RETURNING private.game.object_key INTO key;
+        RETURN key;
         END $$ LANGUAGE plpgsql;
     """)
 
@@ -279,7 +281,7 @@ def create_stored_procedures_select() -> None:
     # grades select functions
     op.execute("""
     CREATE OR REPLACE FUNCTION private.select_grades_by_ids(text)
-        RETURNS TABLE (id int, name_en varchar(20), name_ru varchar(20), background text, background_key text)
+        RETURNS TABLE (id int, name_en varchar(20), name_ru varchar(20), background text, object_key text)
         AS $$
         DECLARE 
             ids INT[];
@@ -291,7 +293,7 @@ def create_stored_procedures_select() -> None:
 
     op.execute("""
     CREATE OR REPLACE FUNCTION private.select_all_grades()
-        RETURNS TABLE (id int, name_en varchar(20), name_ru varchar(20), background text, background_key text)
+        RETURNS TABLE (id int, name_en varchar(20), name_ru varchar(20), background text, object_key text)
         AS $$
         BEGIN
         RETURN QUERY (SELECT * FROM private.grade);
@@ -300,7 +302,7 @@ def create_stored_procedures_select() -> None:
 
     op.execute("""
      CREATE OR REPLACE FUNCTION private.select_grade_by_name(text)
-        RETURNS TABLE (id int, name_en varchar(20), name_ru varchar(20), background text, background_key text)
+        RETURNS TABLE (id int, name_en varchar(20), name_ru varchar(20), background text, object_key text)
         AS $$
         BEGIN
         RETURN QUERY (SELECT * FROM private.grade WHERE private.grade.name_en = $1);
@@ -310,7 +312,7 @@ def create_stored_procedures_select() -> None:
     # subject select functions
     op.execute("""
     CREATE OR REPLACE FUNCTION private.select_subjects_by_ids(text, int)
-        RETURNS TABLE (id int, fk int, name_en varchar(20), name_ru varchar(20), background text, background_key text)
+        RETURNS TABLE (id int, fk int, name_en varchar(20), name_ru varchar(20), background text, object_key text)
         AS $$
         DECLARE 
             ids INT[];
@@ -322,7 +324,7 @@ def create_stored_procedures_select() -> None:
 
     op.execute("""
     CREATE OR REPLACE FUNCTION private.select_all_subjects(int)
-        RETURNS TABLE (id int, fk int, name_en varchar(20), name_ru varchar(20), background text, background_key text)
+        RETURNS TABLE (id int, fk int, name_en varchar(20), name_ru varchar(20), background text, object_key text)
         AS $$
         BEGIN
         RETURN QUERY (SELECT * FROM private.subject WHERE private.subject.fk = $1);
@@ -331,7 +333,7 @@ def create_stored_procedures_select() -> None:
 
     op.execute("""
     CREATE OR REPLACE FUNCTION private.select_subject_by_name(text, int)
-        RETURNS TABLE (id int, fk int, name_en varchar(20), name_ru varchar(20), background text, background_key text)
+        RETURNS TABLE (id int, fk int, name_en varchar(20), name_ru varchar(20), background text, object_key text)
         AS $$
         BEGIN
         RETURN QUERY (SELECT * FROM private.subject WHERE private.subject.name_en = $1 AND private.subject.fk = $2);
@@ -341,7 +343,7 @@ def create_stored_procedures_select() -> None:
     # branch select functions
     op.execute("""
     CREATE OR REPLACE FUNCTION private.select_all_branches(int)
-        RETURNS TABLE (id int, fk int, name_en varchar(20), name_ru varchar(20), background text, background_key text)
+        RETURNS TABLE (id int, fk int, name_en varchar(20), name_ru varchar(20), background text, object_key text)
         AS $$
         BEGIN
         RETURN QUERY (SELECT * FROM private.branch WHERE private.branch.fk = $1);
@@ -350,7 +352,7 @@ def create_stored_procedures_select() -> None:
 
     op.execute("""
     CREATE OR REPLACE FUNCTION private.select_branch_by_name(text, int)
-        RETURNS TABLE (id int, fk int, name_en varchar(20), name_ru varchar(20), background text, background_key text)
+        RETURNS TABLE (id int, fk int, name_en varchar(20), name_ru varchar(20), background text, object_key text)
         AS $$
         BEGIN
         RETURN QUERY (SELECT * FROM private.branch WHERE private.branch.name_en = $1 AND private.branch.fk = $2);
@@ -360,7 +362,7 @@ def create_stored_procedures_select() -> None:
     # lecture select function
     op.execute("""
     CREATE OR REPLACE FUNCTION private.select_all_lectures(int)
-        RETURNS TABLE (id int, fk int, name_en varchar(20), name_ru varchar(20), description text, background text, background_key text)
+        RETURNS TABLE (id int, fk int, name_en varchar(20), name_ru varchar(20), description text, background text, object_key text)
         AS $$
         BEGIN
         RETURN QUERY (SELECT * FROM private.lecture WHERE private.lecture.fk = $1);
@@ -369,7 +371,7 @@ def create_stored_procedures_select() -> None:
 
     op.execute("""
     CREATE OR REPLACE FUNCTION private.select_lecture_by_name(text, int)
-        RETURNS TABLE (id int, fk int, name_en varchar(20), name_ru varchar(20), description text, background text, background_key text)
+        RETURNS TABLE (id int, fk int, name_en varchar(20), name_ru varchar(20), description text, background text, object_key text)
         AS $$
         BEGIN
         RETURN QUERY (SELECT * FROM private.lecture WHERE private.lecture.name_en = $1 AND private.lecture.fk = $2);
@@ -379,7 +381,7 @@ def create_stored_procedures_select() -> None:
     # theory
     op.execute("""
     CREATE OR REPLACE FUNCTION private.select_theory(int)
-        RETURNS TABLE (id int, name_ru varchar(20), description text, key text)
+        RETURNS TABLE (id int, name_ru varchar(20), description text, object_key text)
         AS $$
         BEGIN
         RETURN QUERY (SELECT * FROM private.theory WHERE private.theory.fk = $1);
@@ -388,26 +390,26 @@ def create_stored_procedures_select() -> None:
     # thoery images
     op.execute("""
     CREATE OR REPLACE FUNCTION private.select_theory_image(int)
-        RETURNS TABLE (url text, "order" int, key text)
+        RETURNS TABLE (url text, "order" int, object_key text)
         AS $$
         BEGIN
-        RETURN QUERY (SELECT private.theory_image.url, private.theory_image."order", private.theory_image.key FROM private.theory_image WHERE private.theory_image.fk = $1);
+        RETURN QUERY (SELECT private.theory_image.url, private.theory_image."order", private.theory_image.object_key FROM private.theory_image WHERE private.theory_image.fk = $1);
         END $$ LANGUAGE plpgsql;
     """)
     # theory audio
     op.execute("""
     CREATE OR REPLACE FUNCTION private.select_theory_audio(int)
-        RETURNS TABLE (url text, "order" int, key text)
+        RETURNS TABLE (url text, "order" int, object_key text)
         AS $$
         BEGIN
-        RETURN QUERY (SELECT private.theory_audio.url, private.theory_audio."order", private.theory_audio.key FROM private.theory_audio WHERE private.theory_audio.fk = $1);
+        RETURN QUERY (SELECT private.theory_audio.url, private.theory_audio."order", private.theory_audio.object_key FROM private.theory_audio WHERE private.theory_audio.fk = $1);
         END $$ LANGUAGE plpgsql;
     """)
     
     # practice
     op.execute("""
     CREATE OR REPLACE FUNCTION private.select_practice(int)
-        RETURNS TABLE (id int, name_ru varchar(20), description text, key text)
+        RETURNS TABLE (id int, name_ru varchar(20), description text, object_key text)
         AS $$
         BEGIN
         RETURN QUERY (SELECT * FROM private.practice WHERE private.practice.fk = $1);
@@ -416,49 +418,26 @@ def create_stored_procedures_select() -> None:
     # practice images
     op.execute("""
     CREATE OR REPLACE FUNCTION private.select_practice_image(int)
-        RETURNS TABLE (url text, "order" int, key text)
+        RETURNS TABLE (url text, "order" int, object_key text)
         AS $$
         BEGIN
-        RETURN QUERY (SELECT private.practice_image.url, private.practice_image."order", private.practice_image.key FROM private.practice_image WHERE private.practice_image.fk = $1);
+        RETURN QUERY (SELECT private.practice_image.url, private.practice_image."order", private.practice_image.object_key FROM private.practice_image WHERE private.practice_image.fk = $1);
         END $$ LANGUAGE plpgsql;
     """)
     # practice audio
     op.execute("""
     CREATE OR REPLACE FUNCTION private.select_practice_audio(int)
-        RETURNS TABLE (url text, "order" int, key text)
+        RETURNS TABLE (url text, "order" int, object_key text)
         AS $$
         BEGIN
-        RETURN QUERY (SELECT private.practice_audio.url, private.practice_audio."order", private.practice_audio.key FROM private.practice_audio WHERE private.practice_audio.fk = $1);
+        RETURN QUERY (SELECT private.practice_audio.url, private.practice_audio."order", private.practice_audio.object_key FROM private.practice_audio WHERE private.practice_audio.fk = $1);
         END $$ LANGUAGE plpgsql;
-    """)
-
-    # select material function
-    # NOTE: You can use this function for getting all material data except images and audio
-    # for theory and practice IN CASE that you are sure there will be all material in every moment
-    # otherwise use separate functions for getting data
-    # this function is to be used with MaterialBulk model
-    op.execute("""
-    CREATE OR REPLACE FUNCTION private.select_material(int)
-        RETURNS TABLE (video_url text, video_name_ru varchar(20), video_description text, video_key text,
-        game_url text, game_name_ru varchar(20), game_description text, theory_name_ru varchar(20), theory_description text, theory_key text,
-        practice_name_ru varchar(20), practice_description text, practice_key text, book_url text, book_name_ru varchar(20), book_description text, book_key text)
-        AS $$
-        BEGIN
-        RETURN QUERY (SELECT video.url AS video_url, video.name_ru AS video_name_ru, video.description AS video_description, video.key AS video_key,
-        game.url AS game_url, game.name_ru AS game_name_ru, game.description AS game_description,
-        theory.name_ru AS theory_name_ru, theory.description AS theory_description, theory.key AS theory_key,
-        practice.name_ru AS practice_name_ru, practice.description AS practice_description, practice.key AS theory_key,
-        book.url AS book_url, book.name_ru AS book_name_ru, book.description AS book_description, book.key AS book_key 
-        FROM private.select_video($1) video INNER JOIN private.select_game($1) game ON video.id = game.id
-        INNER JOIN private.select_book($1) book ON video.id = book.id INNER JOIN private.select_theory($1) theory
-        ON video.id = theory.id INNER JOIN private.select_practice($1) practice ON video.id = practice.id);
-        END $$ LANGUAGE plpgsql;  
     """)
 
     # video
     op.execute("""
     CREATE OR REPLACE FUNCTION private.select_video(int)
-        RETURNS TABLE (id int, url text, name_ru varchar(20), description text, key text)
+        RETURNS TABLE (id int, url text, name_ru varchar(20), description text, object_key text)
         AS $$
         BEGIN
         RETURN QUERY (SELECT * FROM private.video WHERE private.video.fk = $1);
@@ -468,7 +447,7 @@ def create_stored_procedures_select() -> None:
     # book
     op.execute("""
     CREATE OR REPLACE FUNCTION private.select_book(int)
-        RETURNS TABLE (id int, url text, name_ru varchar(20), description text, key text)
+        RETURNS TABLE (id int, url text, name_ru varchar(20), description text, object_key text)
         AS $$
         BEGIN
         RETURN QUERY (SELECT * FROM private.book WHERE private.book.fk = $1);
@@ -478,7 +457,7 @@ def create_stored_procedures_select() -> None:
     # game
     op.execute("""
     CREATE OR REPLACE FUNCTION private.select_game(int)
-        RETURNS TABLE (id int, url text, name_ru varchar(20), description text)
+        RETURNS TABLE (id int, url text, name_ru varchar(20), description text, object_key text)
         AS $$
         BEGIN
         RETURN QUERY (SELECT * FROM private.game WHERE private.game.fk = $1);
@@ -503,7 +482,6 @@ def drop_stored_procedures() -> None:
     "select_all_lectures(int)",
     "select_all_lecture_keys",
     "select_theory_image",
-    "select_material",
     "select_lecture_by_name",
     "select_theory_audio",
     "select_video",
@@ -546,7 +524,7 @@ def create_private_tables() -> None:
         sa.Column("name_en", sa.String(20), nullable=False),
         sa.Column("name_ru", sa.String(20), nullable=False),
         sa.Column("background", sa.Text, nullable=False),
-        sa.Column("background_key", sa.Text, nullable=False),
+        sa.Column("object_key", sa.Text, nullable=False),
         sa.UniqueConstraint('name_en'),
         schema="private"
     )
@@ -559,7 +537,7 @@ def create_private_tables() -> None:
         sa.Column("name_en", sa.String(20), nullable=False),
         sa.Column("name_ru", sa.String(20), nullable=False),
         sa.Column("background", sa.Text, nullable=False),
-        sa.Column("background_key", sa.Text, nullable=False),
+        sa.Column("object_key", sa.Text, nullable=False),
         sa.ForeignKeyConstraint(['fk'], ['private.grade.id'], onupdate='CASCADE', ondelete='CASCADE'),
         sa.UniqueConstraint('fk', 'name_en'),
         schema="private"    
@@ -573,7 +551,7 @@ def create_private_tables() -> None:
         sa.Column("name_en", sa.String(20), nullable=False),
         sa.Column("name_ru", sa.String(20), nullable=False),
         sa.Column("background", sa.Text, nullable=False),
-        sa.Column("background_key", sa.Text, nullable=False),
+        sa.Column("object_key", sa.Text, nullable=False),
         sa.ForeignKeyConstraint(['fk'], ['private.subject.id'], onupdate='CASCADE', ondelete='CASCADE'),
         sa.UniqueConstraint('fk', 'name_en'),
         schema="private"    
@@ -588,7 +566,7 @@ def create_private_tables() -> None:
         sa.Column("name_ru", sa.String(20), nullable=False),
         sa.Column("description", sa.Text, nullable=False),
         sa.Column("background", sa.Text, nullable=False),
-        sa.Column("background_key", sa.Text, nullable=False),
+        sa.Column("object_key", sa.Text, nullable=False),
         sa.ForeignKeyConstraint(['fk'], ['private.branch.id'], onupdate='CASCADE', ondelete='CASCADE'),
         sa.UniqueConstraint('fk', 'name_en'),
         schema="private"    
@@ -602,7 +580,7 @@ def create_private_tables() -> None:
         sa.Column("url", sa.Text, nullable=False),
         sa.Column("name_ru", sa.String(20), nullable=False),
         sa.Column("description", sa.Text, nullable=False),
-        sa.Column("key", sa.Text, nullable=True),
+        sa.Column("object_key", sa.Text, nullable=True),
         sa.ForeignKeyConstraint(['fk'], ['private.lecture.id'], onupdate='CASCADE', ondelete='CASCADE'),
         sa.UniqueConstraint('fk'),
         schema="private"    
@@ -614,6 +592,7 @@ def create_private_tables() -> None:
         sa.Column("url", sa.Text, nullable=False),
         sa.Column("name_ru", sa.String(20), nullable=False),
         sa.Column("description", sa.Text, nullable=False),
+        sa.Column("object_key", sa.Text, nullable=False),
         sa.ForeignKeyConstraint(['fk'], ['private.lecture.id'], onupdate='CASCADE', ondelete='CASCADE'),
         sa.UniqueConstraint('fk'),
         schema="private"    
@@ -625,7 +604,7 @@ def create_private_tables() -> None:
         sa.Column("url", sa.Text, nullable=False),
         sa.Column("name_ru", sa.String(20), nullable=False),
         sa.Column("description", sa.Text, nullable=False),
-        sa.Column("key", sa.Text, nullable=False),
+        sa.Column("object_key", sa.Text, nullable=False),
         sa.ForeignKeyConstraint(['fk'], ['private.lecture.id'], onupdate='CASCADE', ondelete='CASCADE'),
         sa.UniqueConstraint('fk'),
         schema="private"    
@@ -636,7 +615,7 @@ def create_private_tables() -> None:
         sa.Column("fk", sa.Integer, nullable=False),
         sa.Column("name_ru", sa.String(20), nullable=False),
         sa.Column("description", sa.Text, nullable=False),
-        sa.Column("key", sa.Text, nullable=False),
+        sa.Column("object_key", sa.Text, nullable=False),
         sa.ForeignKeyConstraint(['fk'], ['private.lecture.id'], onupdate='CASCADE', ondelete='CASCADE'),
         sa.UniqueConstraint('fk'),
         schema="private"    
@@ -647,7 +626,7 @@ def create_private_tables() -> None:
         sa.Column("fk", sa.Integer, nullable=False),
         sa.Column("name_ru", sa.String(20), nullable=False),
         sa.Column("description", sa.Text, nullable=False),
-        sa.Column("key", sa.Text, nullable=False),
+        sa.Column("object_key", sa.Text, nullable=False),
         sa.ForeignKeyConstraint(['fk'], ['private.lecture.id'], onupdate='CASCADE', ondelete='CASCADE'),
         sa.UniqueConstraint('fk'),
         schema="private"    
@@ -658,7 +637,7 @@ def create_private_tables() -> None:
         sa.Column("fk", sa.Integer, nullable=False),
         sa.Column("order", sa.Integer, nullable=False),
         sa.Column("url", sa.Text, nullable=False),
-        sa.Column("key", sa.Text, nullable=False),
+        sa.Column("object_key", sa.Text, nullable=False),
         sa.ForeignKeyConstraint(['fk'], ['private.theory.fk'], onupdate='CASCADE', ondelete='CASCADE'),
         sa.UniqueConstraint("fk", "order"),
         schema="private"
@@ -669,7 +648,7 @@ def create_private_tables() -> None:
         sa.Column("fk", sa.Integer, nullable=False),
         sa.Column("order", sa.Integer, nullable=False),
         sa.Column("url", sa.Text, nullable=False),
-        sa.Column("key", sa.Text, nullable=False),
+        sa.Column("object_key", sa.Text, nullable=False),
         sa.ForeignKeyConstraint(['fk'], ['private.theory.fk'], onupdate='CASCADE', ondelete='CASCADE'),
         sa.UniqueConstraint("fk", "order"),
         schema="private"
@@ -680,7 +659,7 @@ def create_private_tables() -> None:
         sa.Column("fk", sa.Integer, nullable=False),
         sa.Column("order", sa.Integer, nullable=False),
         sa.Column("url", sa.Text, nullable=False),
-        sa.Column("key", sa.Text, nullable=False),
+        sa.Column("object_key", sa.Text, nullable=False),
         sa.ForeignKeyConstraint(['fk'], ['private.practice.fk'], onupdate='CASCADE', ondelete='CASCADE'),
         sa.UniqueConstraint("fk", "order"),
         schema="private"
@@ -691,7 +670,7 @@ def create_private_tables() -> None:
         sa.Column("fk", sa.Integer, nullable=False),
         sa.Column("order", sa.Integer, nullable=False),
         sa.Column("url", sa.Text, nullable=False),
-        sa.Column("key", sa.Text, nullable=False),
+        sa.Column("object_key", sa.Text, nullable=False),
         sa.ForeignKeyConstraint(['fk'], ['private.practice.fk'], onupdate='CASCADE', ondelete='CASCADE'),
         sa.UniqueConstraint("fk", "order"),
         schema="private"

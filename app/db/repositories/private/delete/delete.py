@@ -12,7 +12,6 @@ import logging
 logger = logging.getLogger(__name__)
 
 class PrivateDBDeleteRepository(BaseDBRepository):
-
     async def delete_grade(self, *, id) -> str:
         return await self.__delete(query=delete_grade_query(id=id))
 
@@ -34,46 +33,34 @@ class PrivateDBDeleteRepository(BaseDBRepository):
     async def delete_book(self, *, id) -> str:
         return await self.__delete(query=delete_book_query(id=id))
 
+    async def delete_game(self, *, id) -> str:
+        return await self.__delete(query=delete_game_query(id=id))
+
     async def delete_video(self, *, id) -> str:
-        return await self.__delete(query=delete_video_query(id=id), none_response_raise=False)
+        """Deletes video. Video does not have to have object_key!"""
+        response = await self._fetch_one(query=delete_video_query(id=id))
+        return response['key'] if response else None
 
-    async def delete_quiz(self, *, id) -> str:
-        return await self.__delete(query=delete_quiz_query(id=id), none_response_raise=False)
+    async def delete_quiz(self, *, fk) -> str:
+        """Deletes quiz entirely and returns list of deleted object_keys."""
+        records = await self._fetch_many(query=delete_quiz_query(fk=fk))
+        return [record['key'] for record in records]
 
-    async def delete_game(self, *, id) -> None:
-        await self.__delete(query=delete_game_query(id=id), none_response_raise=False)
+    async def delete_quiz_question(self, *, id) -> str:
+        """Deletes quiz. Quiz does not have to have object_key!"""
+        response = await self._fetch_one(query=delete_quiz_question_query(id=id))
+        return response['key'] if response else None
 
     # subscription plans
     async def delete_grade_subscription_plan(self, *, id) -> None:
-        await self.__delete(query=delete_available_grade_plans_query(id=id), none_response_raise=False)
-
+        await self._execute_one(query=delete_available_grade_plans_query(id=id))
 
     async def delete_subject_subscription_plan(self, *, id) -> None:
-        await self.__delete(query=delete_available_subject_plans_query(id=id), none_response_raise=False)
+        await self._execute_one(query=delete_available_subject_plans_query(id=id))
 
-    async def __delete(self, *, query, none_response_raise=True):
-        """
-        If returned from delete query is None return 404 (*)
-
-        * If none_response_raise is set to False, 404 will not be raised, 
-        rather return None from function
-        """
-
-        try:
-            response = await self.db.fetch_one(query=query)
-        except Exception as e:
-            logger.error("--- ERROR TRYING TO DELETE ---")
-            logger.error(e)
-            logger.error("--- ERROR TRYING TO DELETE ---")
-            raise HTTPException(status_code=400, detail=f"Unhandled error trying to delete. Exited with {e}. Query: {query}")
-        try:
-            key = response['key']
-            if not key:
-                raise HTTPException(status_code=404, detail="Trying to delete returned nothing.")
-        except Exception as e:
-            if none_response_raise:
-                raise HTTPException(status_code=400, detail=f"Trying to parse deleted values raised {e}")
-            else:
-                return None
-
-        return key
+    async def __delete(self, *, query):
+        """Executes query and tries to return deleted key or raise HTTPException"""
+        response = await self._fetch_one(query=query)
+        if not response['key']:
+            raise HTTPException(status_code=404, detail="Trying to delete returned nothing.")
+        return response['key']

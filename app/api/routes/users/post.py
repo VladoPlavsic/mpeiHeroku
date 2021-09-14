@@ -10,17 +10,17 @@ from app.api.dependencies.email import send_message, create_confirm_code_msg, cr
 
 from app.db.repositories.users.users import UsersDBRepository
 from app.api.dependencies.database import get_db_repository
+from app.api.dependencies.auth import get_user_from_token, auth_service
 
 from app.api.dependencies.auth import generate_confirmation_code
 
-from app.models.token import AccessToken
-from app.services import auth_service
+from app.models.token import AccessToken, RefreshToken
 
 # request models
 from app.models.user import UserCreate
 
 # response models
-from app.models.user import PublicUserInDB
+from app.models.user import PublicUserInDB, UserInDB
 
 router = APIRouter()
 
@@ -42,13 +42,26 @@ async def register_new_user(
     ) -> PublicUserInDB:
     registred = await db_repo.register_new_user(new_user=new_user)
 
+    if registred and not isinstance(registred, UserInDB):
+        # if email is taken but not confirmed, resend confirmation email
+        background_tasks.add_task(send_message, subject="Email confirmation. MPEI kids", message_text=create_confirm_link(token=registred, username=new_user.full_name), to=new_user.email)
+        raise HTTPException(
+                status_code=409,
+                detail="This email is already taken but email not confirmed. Confirmation email resent!"
+            )
+    elif not registred:
+        raise HTTPException(
+                status_code=409,
+                detail="This email is already taken. Login whith that email or register with new one!"
+            )
+
     access_token = AccessToken(
         access_token=auth_service.create_access_token_for_user(user=registred), token_type='bearer'
     )
 
     await db_repo.set_jwt_token(user_id=registred.id, token=access_token.access_token)
 
-    background_tasks.add_task(send_message, subject="Email confirmation. MPEI kids", message_text=create_confirm_link(token=access_token.access_token), to=registred.email)
+    background_tasks.add_task(send_message, subject="Подтверждение электронной почты", message_text=create_confirm_link(token=access_token.access_token, username=new_user.full_name), to=registred.email)
 
     return PublicUserInDB(**registred.dict())
 
@@ -78,7 +91,7 @@ async def user_login_with_email_and_password_send_code(
     confirmation_code = generate_confirmation_code()
     confirmation_code = await user_repo.set_confirmation_code(user_id=user.id, confirmation_code=confirmation_code)
 
-    background_tasks.add_task(send_message, subject="Confirmation code.", message_text=create_confirm_code_msg(confirmation_code=confirmation_code), to=user.email)
+    background_tasks.add_task(send_message, subject="Код подтверждения", message_text=create_confirm_code_msg(confirmation_code=confirmation_code), to=user.email)
 
     return {"Detail": "Confirmation code email sent!"}
 
@@ -105,10 +118,33 @@ async def user_login_with_email_and_password(
         )
 
     access_token = AccessToken(access_token=auth_service.create_access_token_for_user(user=user), token_type="bearer")
+    refresh_token = RefreshToken(refresh_token=auth_service.create_refresh_token_for_user(user=user))
 
-    await user_repo.set_jwt_token(user_id=user.id, token=access_token.access_token)
+    await user_repo.set_jwt_token(user_id=user.id, token=refresh_token.refresh_token)
 
-    return PublicUserInDB(**user.dict(), access_token=access_token)
+    return PublicUserInDB(**user.dict(), access_token=access_token, refresh_token=refresh_token)
+
+@router.post("/refresh/token", response_model=PublicUserInDB)
+async def refresh_jw_token(
+    refresh_token: str,
+    user_repo: UsersDBRepository = Depends(get_db_repository(UsersDBRepository)),
+    ) -> PublicUserInDB:
+    user = await get_user_from_token(token=refresh_token)
+    user = await user_repo.check_refresh_token(user=user, refresh_token=refresh_token)
+
+    if not user:
+        raise HTTPException(
+            status_code=401,
+            detail="Could not refresh jwt. Refresh token not valid. Try logging in again",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+        
+    access_token = AccessToken(access_token=auth_service.create_access_token_for_user(user=user), token_type="bearer")
+    refresh_token = RefreshToken(refresh_token=auth_service.create_refresh_token_for_user(user=user))
+
+    await user_repo.set_jwt_token(user_id=user.id, token=refresh_token.refresh_token)
+
+    return PublicUserInDB(**user.dict(), access_token=access_token, refresh_token=refresh_token)
 
 @router.post("/subscriptions/check/")
 async def user_check_expired_subscriptions(

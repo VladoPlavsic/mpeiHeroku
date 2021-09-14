@@ -27,7 +27,7 @@ def create_tables() -> None:
         sa.Column("fk", sa.Integer, nullable=False),
         sa.Column("order_number", sa.Integer, nullable=False),
         sa.Column("question", sa.Text, nullable=True),
-        sa.Column("image_key", sa.Text, nullable=True),
+        sa.Column("object_key", sa.Text, nullable=True),
         sa.Column("image_url", sa.Text, nullable=True),
         sa.ForeignKeyConstraint(['fk'], ['private.lecture.id'], onupdate='CASCADE', ondelete='CASCADE'),
         sa.UniqueConstraint('fk', 'order_number'),
@@ -53,13 +53,13 @@ def drop_tables() -> None:
 def create_quiz_handling_functions() -> None:
     # insert question
     op.execute("""
-    CREATE OR REPLACE FUNCTION private.insert_quiz_question(i_lecture_id int, i_order_number int, i_question text, i_image_key text, i_image_url text, i_answers text[], i_is_true boolean[])
-    RETURNS TABLE (id int, fk int, order_number int, question text, image_key text, image_url text, answer_id int, question_id int, answer text, is_true boolean)
+    CREATE OR REPLACE FUNCTION private.insert_quiz_question(i_lecture_id int, i_order_number int, i_question text, i_object_key text, i_image_url text, i_answers text[], i_is_true boolean[])
+    RETURNS TABLE (id int, fk int, order_number int, question text, object_key text, image_url text, answer_id int, question_id int, answer text, is_true boolean)
     AS $$
     DECLARE 
         inserted int;
     BEGIN
-        INSERT INTO private.quiz_questions(fk, order_number, question, image_key, image_url) VALUES (i_lecture_id, i_order_number, i_question ,i_image_key, i_image_url) RETURNING private.quiz_questions.id INTO inserted;
+        INSERT INTO private.quiz_questions(fk, order_number, question, object_key, image_url) VALUES (i_lecture_id, i_order_number, i_question ,i_object_key, i_image_url) RETURNING private.quiz_questions.id INTO inserted;
         FOR index IN 1 .. array_upper(i_answers, 1)
         LOOP
             INSERT INTO private.quiz_answers(fk, answer, is_true) VALUES(inserted, i_answers[index], i_is_true[index]);
@@ -83,7 +83,7 @@ def create_quiz_handling_functions() -> None:
     # select questions by lecture
     op.execute("""
     CREATE OR REPLACE FUNCTION private.get_quiz_questions(i_lecture_id int)
-    RETURNS TABLE (id int, fk int, order_number int, question text, image_key text, image_url text)
+    RETURNS TABLE (id int, fk int, order_number int, question text, object_key text, image_url text)
     AS $$
     BEGIN
         RETURN QUERY (SELECT * FROM private.quiz_questions WHERE private.quiz_questions.fk = i_lecture_id ORDER BY private.quiz_questions.order_number);
@@ -107,18 +107,27 @@ def create_quiz_handling_functions() -> None:
     DECLARE 
         key text;
     BEGIN
-        DELETE FROM private.quiz_questions WHERE id = i_question_id RETURNING image_key INTO key;
+        DELETE FROM private.quiz_questions WHERE id = i_question_id RETURNING object_key INTO key;
         RETURN key;
     END $$ LANGUAGE plpgsql;
+    """)
+
+    # delete entire quiz
+    op.execute("""
+    CREATE OR REPLACE FUNCTION private.delete_all_quiz(fk INT)
+    RETURNS setof TEXT
+    AS $$
+        DELETE FROM private.quiz_questions WHERE private.quiz_questions.fk = fk RETURNING private.quiz_questions.object_key;
+    $$ LANGUAGE sql;
     """)
 
     # select all keys for updating image links
     op.execute("""
     CREATE OR REPLACE FUNCTION private.select_all_quiz_question_keys()
-    RETURNS TABLE (id int, key text)
+    RETURNS TABLE (id int, object_key text)
     AS $$
     BEGIN
-        RETURN QUERY (SELECT private.quiz_questions.id, image_key FROM private.quiz_questions);
+        RETURN QUERY (SELECT private.quiz_questions.id, private.quiz_questions.object_key FROM private.quiz_questions);
     END $$ LANGUAGE plpgsql;
     """)
     # update all links by keys
@@ -131,7 +140,7 @@ def create_quiz_handling_functions() -> None:
         LOOP
             UPDATE private.quiz_questions SET
                 image_url = urls[index]
-            WHERE image_key = keys[index];
+            WHERE object_key = keys[index];
         END LOOP;
     END $$ LANGUAGE plpgsql;
     """)
@@ -146,6 +155,7 @@ def create_quiz_handling_functions() -> None:
         question_numbers INT[];
         answers TEXT[];
         correct_answers TEXT[];
+        correct_answers_id INT[];
         ret RECORD;
     BEGIN
         FOR index IN 1 .. array_upper(i_questions, 1) 
@@ -155,14 +165,16 @@ def create_quiz_handling_functions() -> None:
                 answers[index] = (SELECT answer FROM private.quiz_answers WHERE private.quiz_answers.id = i_answers[index]);
                 question_numbers[index] = (SELECT order_number FROM private.quiz_questions WHERE private.quiz_questions.id = i_questions[index]);
                 correct_answers[index] = answers[index];
+                correct_answers_id[index] = (SELECT id FROM private.quiz_answers WHERE is_true = 't' AND private.quiz_answers.fk = i_questions[index]);
             ELSE
                 correct[index] = 'f';
                 answers[index] = (SELECT answer FROM private.quiz_answers WHERE private.quiz_answers.id = i_answers[index]);
                 question_numbers[index] = (SELECT order_number FROM private.quiz_questions WHERE private.quiz_questions.id = i_questions[index]);
                 correct_answers[index] = (SELECT answer FROM private.quiz_answers WHERE is_true = 't' AND private.quiz_answers.fk = i_questions[index]);
+                correct_answers_id[index] = (SELECT id FROM private.quiz_answers WHERE is_true = 't' AND private.quiz_answers.fk = i_questions[index]);
             END IF;
         END LOOP;
-        ret := (correct, answers, correct_answers, i_questions, i_answers, question_numbers);
+        ret := (correct, answers, correct_answers, correct_answers_id, i_questions, i_answers, question_numbers);
         RETURN ret; 
     END $$ LANGUAGE plpgsql;
     """)
@@ -176,7 +188,8 @@ def drop_quiz_handling_functions() -> None:
         'select_all_quiz_question_keys',
         'update_quiz_links',
         'delete_quiz_by_id',
-        'check_quiz_success'
+        'check_quiz_success',
+        'delete_all_quiz',
     ]
 
     for function in functions:

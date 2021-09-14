@@ -7,12 +7,10 @@ from app.db.repositories.about.about import AboutDBRepository
 
 from app.api.dependencies.database import get_db_repository
 
-
 # response models
 from app.models.about import TeamMemberInDBModel
 from app.models.about import ContactsInDBModel
 from app.models.about import AboutProjectInDBModel
-
 
 router = APIRouter()
 

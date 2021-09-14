@@ -6,3 +6,6 @@ class CDNCoreModel(BaseModel):
 
 class DBCoreModel(BaseModel):
     pass
+
+class AllowCreate(BaseModel):
+    OK: bool

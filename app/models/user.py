@@ -3,12 +3,10 @@ from datetime import datetime
 from typing import Optional, Any
 from pydantic import EmailStr, constr, validator
 from app.models.core import BaseModel
-from app.models.token import AccessToken
+from app.models.token import AccessToken, RefreshToken
 
 class UserBase(BaseModel):
-    """
-    Leaving off password and salt from base model
-    """
+    """Leaving off password and salt from base model"""
     email: Optional[EmailStr]
     phone_number: str
     city: str
@@ -18,9 +16,7 @@ class UserBase(BaseModel):
     is_superuser: bool = False
 
 class UserCreate(BaseModel):
-    """
-    Email, username, and password are required for registering a new user
-    """
+    """Email, username, and password are required for registering a new user"""
     email: EmailStr
     phone_number: str
     city: str
@@ -29,32 +25,27 @@ class UserCreate(BaseModel):
     full_name: str
 
 class UserUpdate(BaseModel):
-    """
-    Users are allowed to update their email
-    """
+    """Users are allowed to update their email"""
     email: Optional[EmailStr]
 
 class UserPasswordUpdate(BaseModel):
-    """
-    Users can change their password
-    """
+    """Users can change their password"""
     password: constr(min_length=7, max_length=100)
     salt: str
 
 class UserInDB(UserBase):
-    """
-    Add in id, created_at, updated_at, and user's password and salt
-    """
+    """Add in id, created_at, updated_at, and user's password and salt"""
     id: int
     password: constr(min_length=7, max_length=100)
     salt: str
     confirmation_code: Optional[str]
     jwt: Optional[str]
+    full_name: str
 
 class PublicUserInDB(UserBase):
     id: int
     access_token: Optional[AccessToken]
-
+    refresh_token: Optional[RefreshToken]
 
 # availble subjects/grades
 class UserAvailableGrades(BaseModel):
@@ -66,3 +57,9 @@ class UserAvailableSubjects(BaseModel):
     subject_id: int
     created_at: datetime
     updated_at: datetime
+
+class AdminAvailableData(BaseModel):
+    is_superuser: bool
+    AWS_SECRET_KEY_ID: Optional[str]
+    AWS_SECRET_ACCESS_KEY: Optional[str]
+    

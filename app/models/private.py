@@ -1,7 +1,6 @@
 from typing import List, Optional
 from app.models.core import DBCoreModel
 
-
 # ###
 # Presentation models
 # ### 
@@ -10,15 +9,17 @@ class PresentationModelCore(DBCoreModel):
     name_ru: str
     description: str
 
+class PresentationCreateModelCheck(DBCoreModel):
+    fk: int
+
 class PresentationCreateModel(PresentationModelCore):
     fk: int
-    key: str
-
+    object_key: str
 
 class PresentationMediaCore(DBCoreModel):
     order: int
     url: str
-    key: str
+    object_key: str
 
 class PresentationMediaInDB(PresentationMediaCore):
     pass
@@ -41,9 +42,12 @@ class BookModelCore(DBCoreModel):
     name_ru: str
     description: str
 
+class BookPostModelCheck(DBCoreModel):
+    fk: int
+
 class BookPostModel(BookModelCore):
     fk: int
-    key: str
+    object_key: str
 
 class BookCreateModel(BookPostModel):
     url: str
@@ -51,7 +55,7 @@ class BookCreateModel(BookPostModel):
 class BookInDB(BookModelCore):
     id: int
     url: str
-    key: str
+    object_key: str
 
 # ###
 # Video models
@@ -65,19 +69,22 @@ class VideoPostModelYT(VideoModelCore):
     fk: int
     url: str
 
+class VideoPostModelCDNCheck(DBCoreModel):
+    fk: int
+
 class VideoPostModelCDN(VideoModelCore):
     fk: int
-    key: str
+    object_key: str
 
 class VideoCreateModel(VideoModelCore):
     fk: int
     url: str
-    key: Optional[str]
+    object_key: Optional[str]
 
 class VideoInDB(VideoModelCore):
     id: int
     url: str
-    key: Optional[str]
+    object_key: Optional[str]
 
 # ###
 # Game models
@@ -86,16 +93,21 @@ class VideoInDB(VideoModelCore):
 class GameModelCore(DBCoreModel):
     name_ru: str
     description: str
-    url: str
+    object_key: str
+
+class GamePostModelCheck(DBCoreModel):
+    fk: int
 
 class GamePostModel(GameModelCore):
     fk: int
 
-class GameCreateModel(GamePostModel):
-    pass
+class GameCreateModel(GameModelCore):
+    fk: int
+    url: str
 
 class GameInDB(GameModelCore):
     id: int
+    url: str
 
 # ###
 # Quiz models
@@ -112,8 +124,12 @@ class QuizModelCore(DBCoreModel):
     lecture_id: int
     order_number: int
     question: Optional[str]
-    image_key: Optional[str]
+    object_key: Optional[str]
     answers: List[AnswerCoreModel]
+    
+class QuizPostModelCheck(DBCoreModel):
+    fk: int
+    order_number: int
 
 class QuizPostModel(QuizModelCore):
     pass
@@ -126,7 +142,7 @@ class QuestionInDB(DBCoreModel):
     fk: int
     order_number: int
     question: Optional[str]
-    image_key: Optional[str]
+    object_key: Optional[str]
     image_url: Optional[str]
 
 class QuizQuestionInDB(QuestionInDB):
@@ -150,6 +166,7 @@ class QuizQuestionAnswerCorrectPair(DBCoreModel):
     answer: str
     correct: bool
     correct_answer: str
+    correct_answer_id: int
 
 class QuizResults(DBCoreModel):
     results: List[QuizQuestionAnswerCorrectPair]
@@ -163,8 +180,11 @@ class QuizResults(DBCoreModel):
 class GradeCoreModel(DBCoreModel):
     name_en: str
     name_ru: str
-    background_key: str
+    object_key: str
     order_number: int
+
+class GradePostModelCheck(DBCoreModel):
+    name_en: str
 
 class GradePostModel(GradeCoreModel):
     pass
@@ -188,8 +208,12 @@ class SubjectCoreModel(DBCoreModel):
     fk: int
     name_en: str
     name_ru: str
-    background_key: str
+    object_key: str
     order_number: int
+
+class SubejctPostModelCheck(DBCoreModel):
+    fk: int
+    name_en: str
 
 class SubejctPostModel(SubjectCoreModel):
     pass
@@ -216,8 +240,12 @@ class BranchCoreModel(DBCoreModel):
     fk: int
     name_en: str
     name_ru: str
-    background_key: str
+    object_key: str
     order_number: int
+
+class BranchPostModelCheck(DBCoreModel):
+    fk: int
+    name_en: str
 
 class BranchPostModel(BranchCoreModel):
     pass
@@ -246,8 +274,12 @@ class LectureCoreModel(DBCoreModel):
     name_en: str
     name_ru: str
     description: str
-    background_key: str
+    object_key: str
     order_number: int
+
+class LecturePostModelCheck(DBCoreModel):
+    fk: int
+    name_en: str
 
 class LecturePostModel(LectureCoreModel):
     pass
@@ -308,19 +340,18 @@ class MaterialResponse(DBCoreModel):
 # ###
 class StructureAllModel(DBCoreModel):
     id: int
-    background_key: str
+    object_key: str
 
 class MaterialAllModel(DBCoreModel):
     id: int
-    key: str
+    object_key: str
 
 class AudioImagesAllModel(DBCoreModel):
     order: int
-    key: str
+    object_key: str
 
 
 # Update models
-
 class UpdateBaseModel(DBCoreModel):
     id: int
     name_ru: Optional[str]
@@ -335,11 +366,11 @@ class UpdateGameModel(UpdateBaseModel):
 
 class UpdateLectureModel(UpdateBaseModel):
     description: Optional[str]
-    background_key: Optional[str]
+    object_key: Optional[str]
     order_number: Optional[int]
 
 class UpdateStructureModel(UpdateBaseModel):
-    background_key: Optional[str]
+    object_key: Optional[str]
     order_number: Optional[int]
 
 class UpdateBookModel(UpdateBaseModel):

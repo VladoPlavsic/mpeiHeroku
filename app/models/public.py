@@ -17,30 +17,32 @@ class VideoPostModelYT(VideoCoreModel):
     url: str
 
 class VideoPostModelCDN(VideoCoreModel):
-    key: str
+    object_key: str
 
 class VideoCreateModel(VideoCoreModel):
     url: str
+    object_key: Optional[str]
 
 class VideoInDB(VideoCoreModel):
     url: str
+    object_key: Optional[str]
 
 # game
 class GameCoreModel(MaterialCoreModel):
-    url: str
+    object_key: str
 
 class GamePostModel(GameCoreModel):
     pass
 
 class GameCreateModel(GameCoreModel):
-    pass
+    url: str
 
 class GameInDB(GameCoreModel):
-    pass
+    url: str
 
 # book
 class BookCoreModel(MaterialCoreModel):
-    key: str
+    object_key: str
 
 class BookPostModel(BookCoreModel):
     pass
@@ -53,7 +55,7 @@ class BookInDB(BookCoreModel):
 
 # presentation
 class PresentationCoreModel(MaterialCoreModel):
-    key: str
+    object_key: str
 
 class PresentationPostModel(PresentationCoreModel):
     pass
@@ -64,7 +66,7 @@ class PresentationCreateModel(PresentationCoreModel):
 class PresentationMediaCoreModel(DBCoreModel):
     order: int
     url: str
-    key: str
+    object_key: str
 
 class PresentationMediaCreate(PresentationMediaCoreModel):
     pass
@@ -75,6 +77,58 @@ class PresentationMediaInDB(PresentationMediaCoreModel):
 class PresentationInDB(PresentationCoreModel):
     images: List[PresentationMediaInDB]
     audio: List[PresentationMediaInDB]
+
+class AnswerCoreModel(DBCoreModel):
+    answer: str
+    is_true: Optional[bool]
+
+class AnswersInDB(AnswerCoreModel):
+    question_id: int
+    answer_id: int
+
+class QuizModelCore(DBCoreModel):
+    order_number: int
+    question: Optional[str]
+    object_key: Optional[str]
+    answers: List[AnswerCoreModel]
+
+class QuizPostModel(QuizModelCore):
+    pass
+
+class QuizCreateModel(QuizModelCore):
+    image_url: Optional[str]
+
+class QuestionInDB(DBCoreModel):
+    id: int
+    order_number: int
+    question: Optional[str]
+    object_key: Optional[str]
+    image_url: Optional[str]
+
+class QuizQuestionInDB(QuestionInDB):
+    answers: List[AnswersInDB]
+
+class QuizInDB(DBCoreModel):
+    questions: List[QuizQuestionInDB]
+
+class QuizQuestionAnswerPair(DBCoreModel):
+    question: int
+    answer: int
+
+class QuizGetResultsModel(DBCoreModel):
+    results: List[QuizQuestionAnswerPair]
+
+class QuizQuestionAnswerCorrectPair(DBCoreModel):
+    question_id: int
+    answer_id: int
+    question_number: int
+    answer: str
+    correct: bool
+    correct_answer: str
+    correct_answer_id: int
+
+class QuizResults(DBCoreModel):
+    results: List[QuizQuestionAnswerCorrectPair]
 
 
 # AboutUs, FAQ, instruction
@@ -129,6 +183,7 @@ class MaterialResponseModel(DBCoreModel):
     video: Optional[VideoInDB]
     game: Optional[GameInDB]
     book: Optional[BookInDB]
+    quiz: Optional[QuizInDB]
     practice: Optional[PresentationInDB]
     theory: Optional[PresentationInDB]
 
@@ -147,15 +202,24 @@ class InstructionAllResponse(DBCoreModel):
 
 
 # update models
-class UpdateVideoModel(DBCoreModel):
+class UpdateCoreModel(DBCoreModel):
     name_ru: Optional[str]
-    url: Optional[str]
     description: Optional[str]
 
-class UpdateGameModel(DBCoreModel):
-    name_ru: Optional[str]
-    url: Optional[str]
-    description: Optional[str]
+class UpdateVideoModel(UpdateCoreModel):
+    pass
+
+class UpdateGameModel(UpdateCoreModel):
+    pass
+
+class UpdateBookModel(UpdateCoreModel):
+    pass
+
+class UpdatePresentationModel(UpdateCoreModel):
+    pass
+
+class PresentationMasterInDB(PresentationCoreModel):
+    pass
 
 class UpdateAboutUsModel(DBCoreModel):
     order: int
@@ -175,8 +239,8 @@ class UpdateInstructionModel(DBCoreModel):
     
 # select all models
 class MaterialAllModel(DBCoreModel):
-    key: str
+    object_key: str
 
 class AudioImagesAllModel(DBCoreModel):
     order: int
-    key: str
+    object_key: str

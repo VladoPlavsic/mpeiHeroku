@@ -1,9 +1,6 @@
 from typing import List, Union
-from databases.backends.postgres import Record
 from app.db.repositories.base import BaseDBRepository
 from app.db.repositories.private.insert.queries import *
-from asyncpg.exceptions import ForeignKeyViolationError
-
 
 from fastapi import HTTPException
 
@@ -25,6 +22,9 @@ from app.models.private import GradeCreateModel
 from app.models.private import SubjectCreateModel
 from app.models.private import BranchCreateModel
 from app.models.private import LectureCreateModel
+# offers
+from app.models.private import CreateGradeSubscriptionPlan
+from app.models.private import CreateSubjectSubscriptionPlan
 
 
 # ###
@@ -42,219 +42,177 @@ from app.models.private import SubjectInDB
 from app.models.private import BranchInDB
 from app.models.private import LectureInDB
 
+from app.db.repositories.types import ContentType
+
 import logging
 
 logger = logging.getLogger(__name__)
 
 class PrivateDBInsertRepository(BaseDBRepository):
+    """Insert data into private db schema."""
 
-    # ###
-    # insert material
-    # ###
+    # MATERIAL
+    async def insert_theory_check(self, *, fk: int) -> bool:
+        """Check if theory can be inserted"""
+        response = await self._fetch_one(query=insert_theory_check_query(fk=fk))
+        return response['yes']
+
     async def insert_theory(self, *, presentation: PresentationCreateModel, images: List[PresentationMediaCreate], audio: List[PresentationMediaCreate]) -> PresentationInDB:
-        return await self.__insert_presentation(presentation=presentation, images=images, audio=audio, table='theory')
+        """Tries to insert theory. If successfull, returns formed PresentationInDB model.
+        
+        Keyword arguments:
+        presentation -- PresentationCreateModel
+        images       -- List of PresentationMediaCreate, must be not None
+        audio        -- List of PresentationMediaCreate, can be left out (audio is not required)
+        """
+        return await self.__insert_presentation(presentation=presentation, images=images, audio=audio, table=ContentType.THEORY)
+
+    async def insert_practice_check(self, *, fk: int) -> bool:
+        """Check if practice can be inserted"""
+        response = await self._fetch_one(query=insert_practice_check_query(fk=fk))
+        return response['yes']
+
 
     async def insert_practice(self, *, presentation: PresentationCreateModel, images: List[PresentationMediaCreate], audio: List[PresentationMediaCreate]) -> PresentationInDB:
-        return await self.__insert_presentation(presentation=presentation, images=images, audio=audio, table='practice')
-
-    async def __insert_presentation(self, *, presentation: PresentationCreateModel, images: List[PresentationMediaCreate], audio: List[PresentationMediaCreate], table: Union['theory', 'practice']) -> PresentationInDB:
+        """Tries to insert practice. If successfull, returns formed PresentationInDB model.
         
-        query = insert_presentation_query(
-            presentation=table, 
-            fk=presentation.fk,
-            name_ru=presentation.name_ru,
-            description=presentation.description,
-            key=presentation.key)
+        Keyword arguments:
+        presentation -- PresentationCreateModel
+        images       -- List of PresentationMediaCreate, must be not None
+        audio        -- List of PresentationMediaCreate, can be left out (audio is not required)
+        """
+        return await self.__insert_presentation(presentation=presentation, images=images, audio=audio, table=ContentType.PRACTICE)
 
-        images_query = insert_presentation_media_query(
-            presentation=table,
-            media_type='image',
-            medium=images,
-        )
+    async def __insert_presentation(self, *, presentation: PresentationCreateModel, images: List[PresentationMediaCreate], audio: List[PresentationMediaCreate] = None, table: ContentType) -> PresentationInDB:
+        """This function inserts all presentation prats.
+        
+        Keyword arguments:
+        presentation -- PresentationCreateModel
+        images       -- List of PresentationMediaCreate, must be not None
+        audio        -- List of PresentationMediaCreate, can be left out (audio is not required)
+        table        -- Content types enum. Determines which type of presentation are we trying to insert.
+                        - theory
+                        - practice
+        """
+        query = insert_presentation_query(table=table.value, **presentation.dict())
+        presentation_record = await self._fetch_one(query=query)
 
+        query = insert_presentation_media_query(table=table.value, media_type='image', medium=images)
+        images_records = await self._fetch_many(query=query)
+
+        images_list = [PresentationMediaInDB(**image) for image in images_records]
+
+        audio_list = []
         if audio:
-            audio_query = insert_presentation_media_query(
-                presentation=table,
-                media_type='audio',
-                medium=audio,
-            )
+            query = insert_presentation_media_query(table=table.value, media_type='audio', medium=audio)
+            audio_records = await self._fetch_many(query=query)
+            audio_list = [PresentationMediaInDB(**audio) for audio in audio_records]
 
-        try:
-            inserted_presentation = await self.db.fetch_one(query=query)
-            inserted_images = await self.db.fetch_all(query=images_query)
+        return PresentationInDB(**presentation_record, images=images_list, audio=audio_list) if presentation_record else None
 
-            if audio:
-                inserted_audio = await self.db.fetch_all(query=audio_query) 
-
-            images = []
-            audios = []
-            for image in inserted_images:
-                images.append(PresentationMediaInDB(**image))
-                
-            if audio:
-                for audio in inserted_audio:
-                    audios.append(PresentationMediaInDB(**audio))
-
-
-        except ForeignKeyViolationError as e:
-            logger.error(f"--- ForeignKeyViolationError RAISED TRYING TO INSERT {table} ---")
-            logger.error(e)
-            logger.error(f"--- ForeignKeyViolationError RAISED TRYING TO INSERT {table} ---")
-            raise HTTPException(status_code=404, detail=f"Insert {table} raised ForeignKeyViolationError. No such key in table lectures.")
-        except Exception as e:
-            logger.error(f"--- ERROR RAISED TRYING TO INSERT {table} ---")
-            logger.error(e)
-            logger.error(f"--- ERROR RAISED TRYING TO INSERT {table} ---")
-            raise HTTPException(status_code=400, detail=f"Unhandled error raised trying to insert {table}. Exited with {e}")
-            
-        return PresentationInDB(
-            id=inserted_presentation['id'], 
-            name_ru=inserted_presentation['name_ru'], 
-            description=inserted_presentation['description'], 
-            images=images,
-            audio=audios)
+    async def insert_book_check(self, *, fk: int) -> bool:
+        """Check if book can be inserted"""
+        response = await self._fetch_one(query=insert_book_check_query(fk=fk))
+        return response['yes']
 
     async def insert_book(self, *, book: BookCreateModel) -> BookInDB:
-        return await self.__insert_book_video(material=book, content_type="book")
+        """Tries to insert book. If successful returns BookInDB model else None."""
+        response = await self._fetch_one(query=insert_book_query(**book.dict()))
+        return BookInDB(**response) if response else None
+
+    async def insert_video_check(self, *, fk: int) -> bool:
+        """Check if video can be inserted"""
+        response = await self._fetch_one(query=insert_video_check_query(fk=fk))
+        return response['yes']
 
     async def insert_video(self, *, video: VideoCreateModel, parse_link=False) -> VideoInDB:
-        '''
-        parse_link: if inserting youtube video, link should be parsed and retrived
-        only id part for embeding it
-        '''
+        """Tries to insert video. If successful returns VideoInDB models else None.
+        
+        Keyword arguments:
+        video      -- VideoCreateModel
+        parse_link -- (default=False). If you are inserting YouTube video, the link should be parsed using parse_youtube_link function.
+                      This way we only store youtube video ID and not whole link, a little bit of data saviour.
+        """
         if parse_link:
             video.url = parse_youtube_link(link=video.url)
 
-        return await self.__insert_book_video(material=video, content_type="video")
+        response = await self._fetch_one(query=insert_video_query(**video.dict()))
+        return VideoInDB(**response) if response else None
 
-    async def __insert_book_video(self, *, material: Union[BookCreateModel, VideoCreateModel], content_type: Union["book", "video"]) -> Union[BookInDB, VideoInDB]:
-
-        if content_type == "video":
-            query = insert_video_query(fk=material.fk, name_ru=material.name_ru, description=material.description, key=material.key, url=material.url)
-        elif content_type == "book":
-            query = insert_book_query(fk=material.fk, name_ru=material.name_ru, description=material.description, key=material.key, url=material.url)
-
-        response = await self.__insert(query=query)
-        return BookInDB(**response) if content_type == "book" else VideoInDB(**response)
+    async def insert_game_check(self, *, fk: int) -> bool:
+        """Check if game can be inserted"""
+        response = await self._fetch_one(query=insert_game_check_query(fk=fk))
+        return response['yes']
 
     async def insert_game(self, *, game: GameCreateModel) -> GameInDB:
+        """Tries to insert game. If successful returns GameInDB model else None."""
+        response = await self._fetch_one(query=insert_game_query(**game.dict()))
+        return GameInDB(**response) if response else None
 
-        response = await self.__insert(query=insert_game_query(fk=game.fk, name_ru=game.name_ru, description=game.description, url=game.url))
-        return GameInDB(**response)
+    async def insert_quiz_check(self, *, fk: int, order_number: int) -> bool:
+        """Check if quiz can be inserted"""
+        response = await self._fetch_one(query=insert_quiz_check_query(fk=fk, order_number=order_number))
+        return response['yes']
 
     async def insert_quiz_question(self, *, quiz_question: QuizCreateModel) -> QuizQuestionInDB:
+        """Tries to insert quiz. If successful returns QuizQuestionInDB model else None."""
         answers = [answer.answer for answer in quiz_question.answers]
         is_true = [answer.is_true for answer in quiz_question.answers]
 
-        response = await self.__insert_many(query=insert_quiz_question_query(
-            lecture_id=quiz_question.lecture_id, 
-            order_number=quiz_question.order_number, 
-            question=quiz_question.question, 
-            image_key=quiz_question.image_key, 
-            image_url=quiz_question.image_url,
-            answers=answers, 
-            is_true=is_true,
-            )
-        )
+        quiz_question.answers = answers
+        response = await self._fetch_many(query=insert_quiz_question_query(**quiz_question.dict(), is_true=is_true))
 
         answers = [AnswersInDB(**answer) for answer in response]
 
-        return QuizQuestionInDB(**response[0], answers=answers)
+        return QuizQuestionInDB(**response[0], answers=answers) if response else None
 
-    # ### 
-    # insert structure
-    # ###
+    # STRUCTURE
+    async def insert_grade_check(self, *, name_en: str) -> bool:
+        """Check if grade can be inserted"""
+        response = await self._fetch_one(query=insert_grade_check_query(name_en=name_en))
+        return response['yes']
+
     async def insert_grade(self, *, grade: GradeCreateModel) -> GradeInDB:
-        query = insert_grades_query(
-            name_en=grade.name_en, 
-            name_ru=grade.name_ru, 
-            background_key=grade.background_key, 
-            background=grade.background,
-            order_number=grade.order_number,
-        )
+        """ """
+        response = await self._fetch_one(query=insert_grades_query(**grade.dict()))
+        return GradeInDB(**response) if response else None
 
-        response = await self.__insert(query=query)
-        return GradeInDB(**response)
+    async def insert_subject_check(self, *, fk: int, name_en: str) -> bool:
+        """Check if subject can be inserted"""
+        response = await self._fetch_one(query=insert_subject_check_query(fk=fk, name_en=name_en))
+        return response['yes']
 
     async def insert_subject(self, *, subject: SubjectCreateModel) -> SubjectInDB:
-        query = insert_subject_query(
-            fk=subject.fk, 
-            name_en=subject.name_en, 
-            name_ru=subject.name_ru, 
-            background_key=subject.background_key, 
-            background=subject.background,
-            order_number=subject.order_number,
-        )
+        """ """
+        response = await self._fetch_one(query=insert_subject_query(**subject.dict()))
+        return SubjectInDB(**response) if response else None
 
-        response = await self.__insert(query=query)
-        return SubjectInDB(**response)
+    async def insert_branch_check(self, *, fk: int, name_en: str) -> bool:
+        """Check if branch can be inserted"""
+        response = await self._fetch_one(query=insert_branch_check_query(fk=fk, name_en=name_en))
+        return response['yes']
 
     async def insert_branch(self, *, branch: BranchCreateModel) -> BranchInDB:
-        query = insert_branch_query(
-            fk=branch.fk, 
-            name_en=branch.name_en, 
-            name_ru=branch.name_ru,
-            background_key=branch.background_key,
-            background=branch.background,
-            order_number=branch.order_number,
-        )
+        """ """
+        response = await self._fetch_one(query=insert_branch_query(**branch.dict()))
+        return BranchInDB(**response) if response else None
 
-        response = await self.__insert(query=query)
-        return BranchInDB(**response)
+    async def insert_lecture_check(self, *, fk: int, name_en: str) -> bool:
+        """Check if lecture can be inserted"""
+        response = await self._fetch_one(query=insert_lecture_check_query(fk=fk, name_en=name_en))
+        return response['yes']
 
     async def insert_lecture(self, *, lecture: LectureCreateModel) -> LectureInDB:
-        query = insert_lecture_query(
-            fk=lecture.fk, 
-            name_en=lecture.name_en, 
-            name_ru=lecture.name_ru, 
-            description=lecture.description, 
-            background_key=lecture.background_key, 
-            background=lecture.background,
-            order_number=lecture.order_number,
-        )
-
-        response = await self.__insert(query=query)
-        return LectureInDB(**response)
+        """ """
+        response = await self._fetch_one(query=insert_lecture_query(**lecture.dict()))
+        return LectureInDB(**response) if response else None
 
         
-    # Insert available subscription plans
-    # grades
-    async def insert_available_grade_plan(self, *, name: str,  price: float, month_count: int) -> None:
-        await self.__insert(query=insert_available_grade_plans_query(name=name, price=price, month_count=month_count))
+    # PLANS
+    async def insert_available_grade_plan(self, *, grade_plan: CreateGradeSubscriptionPlan) -> None:
+        """ """
+        await self._execute_one(query=insert_available_grade_plans_query(**grade_plan.dict()))
 
-    # subjects
-    async def insert_available_subject_plan(self, *, name: str, price: float, month_count: int) -> None:
-        await self.__insert(query=insert_available_subject_plans_query(name=name, price=price, month_count=month_count))
-
-
-    async def __insert(self, *, query) -> Record:
-        try:
-            response = await self.db.fetch_one(query=query)
-        except ForeignKeyViolationError as e:
-            logger.error(f"--- ForeignKeyViolationError RAISED TRYING TO INSERT ONE OF PRIVATE QUERIES ---")
-            logger.error(e)
-            logger.error(f"--- ForeignKeyViolationError RAISED TRYING TO INSERT ONE OF PRIVATE QUERIES ---")
-            raise HTTPException(status_code=404, detail=f"Insert query raised ForeignKeyViolationError. No such key in parent table. {query}")
-        except Exception as e:
-            logger.error(f"--- ERROR RAISED TRYING TO INSERT ONE OF PRIVATE QUERIES ---")
-            logger.error(e)
-            logger.error(f"--- ERROR RAISED TRYING TO INSERT ONE OF PRIVATE QUERIES---")
-            raise HTTPException(status_code=400, detail=f"Unhandled error raised trying to insert one of private queries. Exited with {e}")
-        
-        return response
-
-    async def __insert_many(self, *, query) -> Record:
-        try:
-            response = await self.db.fetch_all(query=query)
-        except ForeignKeyViolationError as e:
-            logger.error(f"--- ForeignKeyViolationError RAISED TRYING TO INSERT ONE OF PRIVATE QUERIES ---")
-            logger.error(e)
-            logger.error(f"--- ForeignKeyViolationError RAISED TRYING TO INSERT ONE OF PRIVATE QUERIES ---")
-            raise HTTPException(status_code=404, detail=f"Insert query raised ForeignKeyViolationError. No such key in parent table. {query}")
-        except Exception as e:
-            logger.error(f"--- ERROR RAISED TRYING TO INSERT ONE OF PRIVATE QUERIES ---")
-            logger.error(e)
-            logger.error(f"--- ERROR RAISED TRYING TO INSERT ONE OF PRIVATE QUERIES---")
-            raise HTTPException(status_code=400, detail=f"Unhandled error raised trying to insert one of private queries. Exited with {e}")
-        
-        return response
+    async def insert_available_subject_plan(self, *, subject_plan: CreateSubjectSubscriptionPlan) -> None:
+        """ """
+        await self._execute_one(query=insert_available_subject_plans_query(**subject_plan.dict()))

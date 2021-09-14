@@ -8,74 +8,94 @@ from app.api.dependencies.database import get_db_repository
 
 from app.db.repositories.parsers import parse_youtube_link
 
-from app.api.dependencies.auth import get_user_from_token, is_superuser, is_verified
+from app.api.dependencies.auth import allowed_or_denied
 
-# request models
+# import update models
 from app.models.public import UpdateVideoModel
 from app.models.public import UpdateGameModel
+from app.models.public import UpdateBookModel
+from app.models.public import UpdatePresentationModel
 from app.models.public import UpdateAboutUsModel
 from app.models.public import UpdateFAQModel
 from app.models.public import UpdateInstructionModel
 
-# response models
+# import response models
 from app.models.public import VideoInDB
 from app.models.public import GameInDB
+from app.models.public import BookInDB
+from app.models.public import PresentationMasterInDB
 from app.models.public import AboutUsInDB
 from app.models.public import FAQInDB
 from app.models.public import InstructionInDB
+
+from app.db.repositories.types import ContentType
 
 from app.models.user import UserInDB
 
 router = APIRouter()
 
 
-@router.put("/video/youtube", response_model=VideoInDB, name="public:update-video-youtube", status_code=HTTP_200_OK)
+@router.put("/video", response_model=VideoInDB, name="public:update-video", status_code=HTTP_200_OK)
 async def update_video(
-    video: UpdateVideoModel = Body(...),
+    updated: UpdateVideoModel = Body(...),
     db_repo: PublicDBRepository = Depends(get_db_repository(PublicDBRepository)),
-    user: UserInDB = Depends(get_user_from_token),
-    is_superuser = Depends(is_superuser),
-    is_verified = Depends(is_verified),
+    allowed: bool = Depends(allowed_or_denied),
     ) -> VideoInDB:
-    if not user.is_superuser:
-        raise HTTPException(status_code=HTTP_403_FORBIDDEN, detail="Not superuser!")
-    if not is_verified:
-        raise HTTPException(status_code=HTTP_403_FORBIDDEN, detail="Email not verified!")
 
-    if video.url:
-        video.url = parse_youtube_link(link=video.url)
-
-    response = await db_repo.update_video(updated=video)
+    response = await db_repo.update_video(updated=updated)
     return response
 
 @router.put("/game", response_model=GameInDB, name="public:update-game", status_code=HTTP_200_OK)
 async def update_game(
     game: UpdateGameModel = Body(...),
     db_repo: PublicDBRepository = Depends(get_db_repository(PublicDBRepository)),
-    user: UserInDB = Depends(get_user_from_token),
-    is_superuser = Depends(is_superuser),
-    is_verified = Depends(is_verified),
+    allowed: bool = Depends(allowed_or_denied),
     ) -> GameInDB:
-    if not user.is_superuser:
-        raise HTTPException(status_code=HTTP_403_FORBIDDEN, detail="Not superuser!")
-    if not is_verified:
-        raise HTTPException(status_code=HTTP_403_FORBIDDEN, detail="Email not verified!")
 
     response = await db_repo.update_game(updated=game)
     return response
+
+""" NEW """
+
+@router.put("/book", response_model=BookInDB, name="public:update-book", status_code=HTTP_200_OK)
+async def update_public_book(
+    updated: UpdateBookModel = Body(...),
+    db_repo: PublicDBRepository = Depends(get_db_repository(PublicDBRepository)),
+    allowed: bool = Depends(allowed_or_denied),
+    ) -> BookInDB:
+
+    response = await db_repo.update_book(updated=updated)
+    return response
+
+@router.put("/practice", response_model=PresentationMasterInDB, name="public:update-practice", status_code=HTTP_200_OK)
+async def update_public_practice(
+    updated: UpdatePresentationModel = Body(...),
+    db_repo: PublicDBRepository = Depends(get_db_repository(PublicDBRepository)),
+    allowed: bool = Depends(allowed_or_denied),
+    ) -> PresentationMasterInDB:
+
+    response = await db_repo.update_presentation(updated=updated, presentation=ContentType.PRACTICE)
+    return response
+
+@router.put("/theory", response_model=PresentationMasterInDB, name="public:update-theory", status_code=HTTP_200_OK)
+async def update_public_practice(
+    updated: UpdatePresentationModel = Body(...),
+    db_repo: PublicDBRepository = Depends(get_db_repository(PublicDBRepository)),
+    allowed: bool = Depends(allowed_or_denied),
+    ) -> PresentationMasterInDB:
+
+    response = await db_repo.update_presentation(updated=updated, presentation=ContentType.THEORY)
+    return response
+
+""" END NEW """
+
 
 @router.put("/about_us", response_model=AboutUsInDB, name="public:update-about_us", status_code=HTTP_200_OK)
 async def update_about_us(
     about_us: UpdateAboutUsModel = Body(...),
     db_repo: PublicDBRepository = Depends(get_db_repository(PublicDBRepository)),
-    user: UserInDB = Depends(get_user_from_token),
-    is_superuser = Depends(is_superuser),
-    is_verified = Depends(is_verified),
+    allowed: bool = Depends(allowed_or_denied),
     ) -> AboutUsInDB:
-    if not user.is_superuser:
-        raise HTTPException(status_code=HTTP_403_FORBIDDEN, detail="Not superuser!")
-    if not is_verified:
-        raise HTTPException(status_code=HTTP_403_FORBIDDEN, detail="Email not verified!")
 
     response = await db_repo.update_about_us(updated=about_us)
     return response
@@ -84,14 +104,8 @@ async def update_about_us(
 async def update_faq(
     faq: UpdateFAQModel = Body(...),
     db_repo: PublicDBRepository = Depends(get_db_repository(PublicDBRepository)),
-    user: UserInDB = Depends(get_user_from_token),
-    is_superuser = Depends(is_superuser),
-    is_verified = Depends(is_verified),
+    allowed: bool = Depends(allowed_or_denied),
     ) -> FAQInDB:
-    if not user.is_superuser:
-        raise HTTPException(status_code=HTTP_403_FORBIDDEN, detail="Not superuser!")
-    if not is_verified:
-        raise HTTPException(status_code=HTTP_403_FORBIDDEN, detail="Email not verified!")
 
     response = await db_repo.update_faq(updated=faq)
     return response
@@ -100,14 +114,8 @@ async def update_faq(
 async def update_instruction(
     instruction: UpdateInstructionModel = Body(...),
     db_repo: PublicDBRepository = Depends(get_db_repository(PublicDBRepository)),
-    user: UserInDB = Depends(get_user_from_token),
-    is_superuser = Depends(is_superuser),
-    is_verified = Depends(is_verified),
+    allowed: bool = Depends(allowed_or_denied),
     ) -> InstructionInDB:
-    if not user.is_superuser:
-        raise HTTPException(status_code=HTTP_403_FORBIDDEN, detail="Not superuser!")
-    if not is_verified:
-        raise HTTPException(status_code=HTTP_403_FORBIDDEN, detail="Email not verified!")
 
     response = await db_repo.update_instruction(updated=instruction)
     return response

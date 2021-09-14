@@ -10,7 +10,7 @@ from app.api.dependencies.auth import get_user_from_token, is_superuser
 from app.db.repositories.users.users import UsersDBRepository
 from app.api.dependencies.database import get_db_repository
 
-from app.models.user import PublicUserInDB, UserInDB
+from app.models.user import PublicUserInDB, UserInDB, AdminAvailableData
 
 from app.models.token import AccessToken
 from app.core.config import AWS_SECRET_ACCESS_KEY, AWS_SECRET_KEY_ID
@@ -24,12 +24,14 @@ async def get_private_grades(
     is_superuser = Depends(is_superuser),
     ) -> bool:
 
-    # if user is superuser, send them key 
-    # for accessing YC s3
+    """If user is superuser, send them secrets for accessing YC s3"""
+    response = AdminAvailableData(is_superuser=is_superuser, AWS_SECRET_ACCESS_KEY=None, AWS_SECRET_KEY_ID=None)
+
     if is_superuser:
-        return {"is_superuser": is_superuser, "AWS_SECRET_ACCESS_KEY": AWS_SECRET_ACCESS_KEY, "AWS_SECRET_KEY_ID": AWS_SECRET_KEY_ID}
-    else:
-        return {"is_superuser": is_superuser, "AWS_SECRET_ACCESS_KEY": None, "AWS_SECRET_KEY_ID": None}
+        response.AWS_SECRET_ACCESS_KEY = AWS_SECRET_ACCESS_KEY
+        response.AWS_SECRET_KEY_ID = AWS_SECRET_KEY_ID
+
+    return response
 
 
 @router.get("/email/confirm")

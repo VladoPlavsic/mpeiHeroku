@@ -24,7 +24,7 @@ AWS_SECRET_ACCESS_KEY = config("AWS_SECRET_ACCESS_KEY", cast=str)
 CDN_ENDPOINT_URL = config("CDN_ENDPOINT_URL", cast=str)
 
 # CDN SETTINGS
-BUCKET = config("BUCKET", cast=str, default="mpei")
+BUCKET = config("BUCKET", cast=str, default="mpei-vlado")
 CDN_LINK_LIFESPAN = config("CDN_LINK_LIFESPAN_SECONDS", cast=int, default=7 * 24 * 60 * 60) # age in seconds NOTE: Max alowed 7 days
 
 # SERVER CREDS AND SETTINGS
@@ -32,7 +32,7 @@ SECRET_KEY = config("SECRET_KEY", cast=Secret)
 ACCESS_TOKEN_EXPIRE_MINUTES = config(
   "ACCESS_TOKEN_EXPIRE_MINUTES",
   cast=int,
-  default=7 * 24 * 60 #one week
+  default=15
 )
 JWT_ALGORITHM = config("JWT_ALGORITHM", cast=str, default="HS256")
 JWT_AUDIENCE = config("JWT_AUDIENCE", cast=str, default="mpei-kids:auth")

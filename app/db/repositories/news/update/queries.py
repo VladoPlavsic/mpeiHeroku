@@ -12,8 +12,8 @@ def update_news_images_links_query(keys, links) -> str:
     return \
         f"SELECT news.update_news_images_sharing_links('{{{keys}}}', '{{{links}}}')"
 
-def update_news_metadata_query(id:int, date: str,title: str, short_desc: str, content: str, url: str, cloud_key: str, preview_image_url: str) -> str:
+def update_news_metadata_query(id:int, date: str,title: str, short_desc: str, content: str, url: str, object_key: str, preview_image_url: str) -> str:
     return \
-        f"SELECT (news.update_news_metadata({id}, {string_or_null(date, title, short_desc, content, url, cloud_key, preview_image_url)})).*"
+        f"SELECT (news.update_news_metadata({id}, {string_or_null(date, title, short_desc, content, url, object_key, preview_image_url)})).*"
 
 

@@ -152,7 +152,9 @@ def update_login_logic() -> None:
         code VARCHAR(6);
     BEGIN   
         SELECT confirmation_code, expiration INTO code, expiration_date FROM users.codes WHERE user_fk = user_id;
-        IF expiration_date < now() or code != i_confirmation_code THEN
+        IF code ISNULL THEN
+            RETURN 'f';
+        ELSEIF expiration_date < now() or code != i_confirmation_code THEN
             RETURN 'f';
         END IF;
         DELETE FROM users.codes WHERE user_fk = user_id;
@@ -218,7 +220,7 @@ def recovery_functions() -> None:
     """)
     # check recovery request key
     op.execute("""
-    CREATE OR REPLACE FUNCTION users.check_recovery_request(i_email text, i_key VARCHAR(64))
+    CREATE OR REPLACE FUNCTION users.check_recovery_request(i_key VARCHAR(64))
     RETURNS VARCHAR(64)
     AS $$
     DECLARE
@@ -226,16 +228,12 @@ def recovery_functions() -> None:
         key VARCHAR(64);
         hash VARCHAR(64);
     BEGIN
-        IF (SELECT COUNT(*) FROM users.users WHERE email = i_email) = 0 THEN
-            RETURN null;
-        END IF;
-        SELECT id INTO user_ FROM users.users WHERE email = i_email;
-        SELECT recovery_key INTO key FROM users.recovery_keys WHERE user_fk = user_;
-        IF key != i_key THEN
+        SELECT user_fk INTO user_ FROM users.recovery_keys WHERE recovery_key = i_key;
+        IF user_ IS NULL THEN
             RETURN null;
         ELSE
             DELETE FROM users.recovery_keys WHERE user_fk = user_;
-            SELECT ENCODE(sha256(key::bytea), 'hex') INTO hash;
+            SELECT ENCODE(sha256(i_key::bytea), 'hex') INTO hash;
             INSERT INTO users.recovery_hashes VALUES(user_, hash) ON CONFLICT (user_fk) DO UPDATE SET recovery_hash = hash RETURNING recovery_hash INTO key;
             RETURN key;
         END IF;
@@ -253,7 +251,7 @@ def recovery_functions() -> None:
         IF (SELECT COUNT(*) FROM users.users WHERE id = user_) = 0 THEN
             RETURN 'f';
         ELSE
-            UPDATE users.users SET 
+            UPDATE users.users SET
                 password = i_password,
                 salt = i_salt
             WHERE id = user_;

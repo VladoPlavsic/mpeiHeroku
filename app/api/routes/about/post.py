@@ -7,7 +7,7 @@ from app.cdn.repositories.about.about import AboutYandexCDNRepository
 
 from app.api.dependencies.database import get_db_repository
 from app.api.dependencies.cdn import get_cdn_repository
-from app.api.dependencies.auth import get_user_from_token, is_verified, is_superuser
+from app.api.dependencies.auth import allowed_or_denied
 
 # post models
 from app.models.about import PostTeamMemberModel
@@ -29,32 +29,21 @@ async def create_about_team(
     new_team_member: PostTeamMemberModel = Body(...),
     db_repo: AboutDBRepository = Depends(get_db_repository(AboutDBRepository)),
     cdn_repo: AboutYandexCDNRepository = Depends(get_cdn_repository(AboutYandexCDNRepository)),
-    user: UserInDB = Depends(get_user_from_token),
-    is_superuser = Depends(is_superuser),
-    is_verified = Depends(is_verified),
+    allowed: bool = Depends(allowed_or_denied),
     ) -> TeamMemberInDBModel:
-    if not user.is_superuser:
-        raise HTTPException(status_code=HTTP_403_FORBIDDEN, detail="Not superuser!")
-    if not is_verified:
-        raise HTTPException(status_code=HTTP_403_FORBIDDEN, detail="Email not verified!")
 
-    sharing_link = cdn_repo.get_sharing_links_from_keys(list_of_objects=[{"Key": new_team_member.photo_key}])
-    response = await db_repo.insert_our_team(new_team=CreateTeamMemberModel(**new_team_member.dict(), photo_link=sharing_link[new_team_member.photo_key]))
+    shared = cdn_repo.get_sharing_link_from_object_key(object_key=new_team_member.object_key)
+    new_team_member = CreateTeamMemberModel(**new_team_member.dict(), photo_link=shared[new_team_member.object_key])
+    response = await db_repo.insert_team_member(new_team=new_team_member)
     return response
 
 @router.post("/contacts", response_model=ContactsInDBModel, name="about:post-contacts", status_code=HTTP_201_CREATED)
 async def create_contacts(
     new_contact: PostContactsModel = Body(...),
     db_repo: AboutDBRepository = Depends(get_db_repository(AboutDBRepository)),
-    user: UserInDB = Depends(get_user_from_token),
-    is_superuser = Depends(is_superuser),
-    is_verified = Depends(is_verified),
+    allowed: bool = Depends(allowed_or_denied),
     ) -> ContactsInDBModel:
-    if not user.is_superuser:
-        raise HTTPException(status_code=HTTP_403_FORBIDDEN, detail="Not superuser!")
-    if not is_verified:
-        raise HTTPException(status_code=HTTP_403_FORBIDDEN, detail="Email not verified!")
-
+    
     response = await db_repo.insert_contacts(new_contacts=new_contact)
     return response
 
@@ -62,15 +51,8 @@ async def create_contacts(
 async def create_about_project(
     new_about_project: PostAboutProjectModel = Body(...),
     db_repo: AboutDBRepository = Depends(get_db_repository(AboutDBRepository)),
-    user: UserInDB = Depends(get_user_from_token),
-    is_superuser = Depends(is_superuser),
-    is_verified = Depends(is_verified),
+    allowed: bool = Depends(allowed_or_denied),
     ) -> AboutProjectInDBModel:
-    # i don't think i need user here ?? Check it later
-    if not user.is_superuser:
-        raise HTTPException(status_code=HTTP_403_FORBIDDEN, detail="Not superuser!")
-    if not is_verified:
-        raise HTTPException(status_code=HTTP_403_FORBIDDEN, detail="Email not verified!")
         
     response = await db_repo.insert_about_project(new_about_project=new_about_project)
     return response

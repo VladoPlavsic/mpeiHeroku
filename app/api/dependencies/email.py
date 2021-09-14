@@ -8,11 +8,12 @@ from app.core.config import SITE_URL
 
 def create_message(sender, to, subject, message_text):
   """Create a message for an email.
-  Args:
-    sender: Email address of the sender.
-    to: Email address of the receiver.
-    subject: The subject of the email message.
-    message_text: The text of the email message.
+
+  Keyword arguments:
+    sender       -- Email address of the sender.
+    to           -- Email address of the receiver.
+    subject      -- The subject of the email message.
+    message_text -- The text of the email message.
   Returns:
     An object containing a base64url encoded email object.
   """
@@ -24,11 +25,12 @@ def create_message(sender, to, subject, message_text):
 
 def send_message_int(service, user_id, message) -> EmailResponse:
     """Send an email message.
-    Args:
-      service: Authorized Gmail API service instance.
-      user_id: User's email address. The special value "me"
-      can be used to indicate the authenticated user.
-      message: Message to be sent.
+
+    Keyword arguments:
+      service -- Authorized Gmail API service instance.
+      user_id -- User's email address. The special value "me"
+                 can be used to indicate the authenticated user.
+      message -- Message to be sent.
     Returns:
       Sent Message.
     """
@@ -40,6 +42,7 @@ def send_message_int(service, user_id, message) -> EmailResponse:
       raise HTTPException(status_code=500, detail=f"Unknown Error. Error raised trying to send message! Exited with {e}")
 
 
+import os
 import os.path
 from googleapiclient.discovery import build
 from google_auth_oauthlib.flow import InstalledAppFlow
@@ -54,6 +57,7 @@ from app.core.config import SERVER_EMAIL, ADMIN_EMAIL
 
 def send_message(subject, message_text, to=ADMIN_EMAIL) -> EmailResponse:
     """Shows basic usage of the Gmail API.
+
     Lists the user's Gmail labels.
     """
     creds = None
@@ -90,33 +94,32 @@ def send_message(subject, message_text, to=ADMIN_EMAIL) -> EmailResponse:
     return send_message_int(service=service, user_id="me", message=message)
 
 
-def create_confirm_link(token: str) -> str:
-    # here should go url of our confirmation page
-    # that page should send confirm request to server
-    # if everything is good: 
-    #     server responds with 200 and AuthResponse(verified=True)
-    #     page displays all good
-    # elif there is something wrong with verification (e.g. user doesn't exist anymore):
-    #     server responds with coresponding error message
-    #     page displays something gone wrong
+def create_confirm_link(token: str, username: str) -> str:
+    """Generates page with confirmation url."""
     confirm_url = f"{SITE_URL}/email/confirm/{token}"
+    with open(os.path.abspath(os.path.dirname(__file__) + "/templates/email_confirmation.html"), "r") as page_file:
+        page = page_file.read()
 
-    return f"""
-    <div style="position: absolute; left: 50%; bottom: 50%; transform: translate(50%, 50%)">
-    <p><h1>Welcome! Thanks for signing up. Please follow this link to activate your account:<h1></p>
-    <p><a href="{confirm_url}"><button style="background: light-blue">Confirm</button></a></p>
-    <br>
-    <p>Cheers!</p>
-    </div>
-    """
+    page = page.replace(":name_placeholder", username)
+    page = page.replace(":email_confirmation_placeholder", confirm_url)
+
+    return page
 
 def create_confirm_code_msg(confirmation_code: int) -> str:
+    """Generates Page with confirmation code"""
+    with open(os.path.abspath(os.path.dirname(__file__) + "/templates/email_code.html"), "r") as page_file:
+        page = page_file.read()
 
-    return f"""
-    <div style="position: absolute; left: 50%; bottom: 50%; transform: translate(50%, 50%)">
-    <p><h1>Welcome! Thanks for signing up. Please follow this link to activate your account:<h1></p>
-    <p>{confirmation_code}</p>
-    <br>
-    <p>Cheers!</p>
-    </div>
-    """
+    page = page.replace(":code_placeholder", confirmation_code)
+    return page
+
+def create_reset_password_email(recovery_hash: str) -> str:
+    """Generates password recovery email"""
+    password_recovery_url = f"{SITE_URL}/confirm/password/recovery/{recovery_hash}"
+    with open(os.path.abspath(os.path.dirname(__file__) + "/templates/email_password_recovery.html"), "r") as page_file:
+        page = page_file.read()
+
+    page = page.replace(":password_recovery_hash_placeholder", password_recovery_url)
+
+    return page
+

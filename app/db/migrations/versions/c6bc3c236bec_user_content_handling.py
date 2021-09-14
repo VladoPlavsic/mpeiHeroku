@@ -58,6 +58,9 @@ def create_handling_functions() -> None:
     CREATE OR REPLACE FUNCTION users.add_grade_to_user(i_user_id int, i_grade_id int, i_subscription_fk int)
     RETURNS VOID
     AS $$
+    DECLARE
+        temprow RECORD;
+        i_subject_sub_fk INT;
     BEGIN
         IF (SELECT month_count FROM subscriptions.grade_subscription_plans WHERE id = i_subscription_fk) > 0 THEN
             IF (SELECT expiration_date FROM users.user_grades WHERE user_fk = i_user_id) > now() THEN
@@ -68,6 +71,12 @@ def create_handling_functions() -> None:
         ELSE
             INSERT INTO users.user_grades(user_fk, grade_fk, expiration_date, for_life) VALUES (i_user_id, i_grade_id, now(), 't');
         END IF;
+        SELECT subscriptions.subject_subscription_plans.id INTO i_subject_sub_fk FROM subscriptions.subject_subscription_plans WHERE month_count = (SELECT month_count FROM subscriptions.grade_subscription_plans WHERE id = i_subscription_fk);
+        FOR temprow IN
+            SELECT id FROM private.subject WHERE private.subject.fk = i_grade_id
+        LOOP
+            SELECT users.add_subject_to_user(i_user_id, temprow.id, i_subject_sub_fk);
+        END LOOP;
     END $$ LANGUAGE plpgsql;
     """)
     # add subject to user
@@ -164,6 +173,28 @@ def create_handling_functions() -> None:
     END $$ LANGUAGE plpgsql;
     """)
 
+    # check if content available
+    op.execute("""
+    CREATE OR REPLACE FUNCTION users.check_if_content_available(user_id int, grade_name text, subject_name text)
+    RETURNS BOOLEAN
+    AS $$
+    DECLARE
+        grade_id INT;
+        subject_id INT;
+        available BOOLEAN;
+    BEGIN
+        SELECT id INTO grade_id FROM private.grade WHERE name_en = grade_name;
+        SELECT id INTO subject_id FROM private.subject WHERE name_en = subject_name;
+        SELECT COUNT(*)::int::bool INTO available FROM users.user_grades WHERE user_fk = user_id AND grade_fk = grade_id;
+        IF available THEN
+            RETURN available;
+        ELSE
+            SELECT COUNT(*)::int::bool INTO available FROM users.user_subjects WHERE user_fk = user_id AND subject_fk = subject_id;
+            RETURN available;
+        END IF;
+    END $$ LANGUAGE plpgsql;
+    """)
+
 def drop_functions() -> None:
     functions = [
         'add_grade_to_user',
@@ -175,6 +206,7 @@ def drop_functions() -> None:
         'select_all_user_available_subjects',
         'remove_grade_from_user_function',
         'remove_subject_from_user_function',
+        'check_if_content_available',
     ]
     
     for function in functions:

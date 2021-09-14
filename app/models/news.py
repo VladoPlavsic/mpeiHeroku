@@ -7,12 +7,12 @@ class NewsCoreModel(BaseModel):
     title: str
     short_desc: str
     url: str
-    cloud_key: str
+    object_key: str
 
 class NewsImagesCore(BaseModel):
     order: int
     url: str
-    cloud_key: str
+    object_key: str
 
 class NewsImagesInDB(NewsImagesCore):
     pass
@@ -50,11 +50,11 @@ class NewsUpdateModel(BaseModel):
     short_desc: Optional[str]
     content: Optional[str]
     url: Optional[str]
-    cloud_key: Optional[str]
+    object_key: Optional[str]
     preview_image_url: Optional[str]
 
 class NewsImagesAllModel(BaseModel):
-    cloud_key: str
+    object_key: str
 
 class NewsAllModel(BaseModel):
-    cloud_key: str
+    object_key: str

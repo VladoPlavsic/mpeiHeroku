@@ -1,13 +1,13 @@
 from fastapi import APIRouter, HTTPException
 from fastapi import Depends, Body
-from starlette.status import HTTP_201_CREATED
+from starlette.status import HTTP_201_CREATED, HTTP_200_OK
 
 from app.db.repositories.public.public import PublicDBRepository
 from app.cdn.repositories.public.public import PublicYandexCDNRepository
 
 from app.api.dependencies.database import get_db_repository
 from app.api.dependencies.cdn import get_cdn_repository
-from app.api.dependencies.auth import get_user_from_token, is_superuser, is_verified
+from app.api.dependencies.auth import allowed_or_denied
 
 # post models
 from app.models.public import PresentationPostModel
@@ -15,6 +15,7 @@ from app.models.public import BookPostModel
 from app.models.public import VideoPostModelYT
 from app.models.public import VideoPostModelCDN
 from app.models.public import GamePostModel
+from app.models.public import QuizPostModel, QuizGetResultsModel
 from app.models.public import AboutUsPostModel
 from app.models.public import FAQPostModel
 from app.models.public import InstructionPostModel
@@ -23,6 +24,7 @@ from app.models.public import InstructionPostModel
 from app.models.public import PresentationCreateModel
 from app.models.public import BookCreateModel
 from app.models.public import VideoCreateModel
+from app.models.public import QuizCreateModel
 from app.models.public import GameCreateModel
 
 # response models
@@ -30,12 +32,12 @@ from app.models.public import PresentationInDB
 from app.models.public import BookInDB
 from app.models.public import VideoInDB
 from app.models.public import GameInDB
-
+from app.models.public import QuizQuestionInDB, QuizResults
 from app.models.public import AboutUsInDB
 from app.models.public import FAQInDB
 from app.models.public import InstructionInDB
 
-from app.models.user import UserInDB
+from app.cdn.types import DefaultFormats
 
 router = APIRouter()
 # ###
@@ -46,18 +48,12 @@ async def create_public_practice(
     presentation: PresentationCreateModel = Body(...),
     db_repo: PublicDBRepository = Depends(get_db_repository(PublicDBRepository)),
     cdn_repo: PublicYandexCDNRepository = Depends(get_cdn_repository(PublicYandexCDNRepository)),
-    user: UserInDB = Depends(get_user_from_token),
-    is_superuser = Depends(is_superuser),
-    is_verified = Depends(is_verified),
+    allowed: bool = Depends(allowed_or_denied),
     ) -> PresentationInDB:
-    if not user.is_superuser:
-        raise HTTPException(status_code=HTTP_403_FORBIDDEN, detail="Not superuser!")
-    if not is_verified:
-        raise HTTPException(status_code=HTTP_403_FORBIDDEN, detail="Email not verified!")
+    
+    images = cdn_repo.format_presentation_content(folder=presentation.object_key, type_=DefaultFormats.IMAGES)
+    audio = cdn_repo.format_presentation_content(folder=presentation.object_key, type_=DefaultFormats.AUDIO)
 
-    # get images and audio formed data    
-    (images, audio) = cdn_repo.form_presentation_insert_data(prefix=presentation.key)
-    # insert into database
     response = await db_repo.insert_practice(presentation=presentation, images=images, audio=audio)
 
     return response
@@ -67,18 +63,12 @@ async def create_public_theory(
     presentation: PresentationCreateModel = Body(...),
     db_repo: PublicDBRepository = Depends(get_db_repository(PublicDBRepository)),
     cdn_repo: PublicYandexCDNRepository = Depends(get_cdn_repository(PublicYandexCDNRepository)),
-    user: UserInDB = Depends(get_user_from_token),
-    is_superuser = Depends(is_superuser),
-    is_verified = Depends(is_verified),
+    allowed: bool = Depends(allowed_or_denied),
     ) -> PresentationInDB:
-    if not user.is_superuser:
-        raise HTTPException(status_code=HTTP_403_FORBIDDEN, detail="Not superuser!")
-    if not is_verified:
-        raise HTTPException(status_code=HTTP_403_FORBIDDEN, detail="Email not verified!")
 
-    # get images and audio formed data    
-    (images, audio) = cdn_repo.form_presentation_insert_data(prefix=presentation.key)
-    # insert into database
+    images = cdn_repo.format_presentation_content(folder=presentation.object_key, type_=DefaultFormats.IMAGES)
+    audio = cdn_repo.format_presentation_content(folder=presentation.object_key, type_=DefaultFormats.AUDIO)
+
     response = await db_repo.insert_theory(presentation=presentation, images=images, audio=audio)
 
     return response
@@ -88,17 +78,14 @@ async def create_public_book(
     book: BookPostModel = Body(...),
     db_repo: PublicDBRepository = Depends(get_db_repository(PublicDBRepository)),
     cdn_repo: PublicYandexCDNRepository = Depends(get_cdn_repository(PublicYandexCDNRepository)),
-    user: UserInDB = Depends(get_user_from_token),
-    is_superuser = Depends(is_superuser),
-    is_verified = Depends(is_verified),
+    allowed: bool = Depends(allowed_or_denied),
     ) -> BookInDB:
-    if not user.is_superuser:
-        raise HTTPException(status_code=HTTP_403_FORBIDDEN, detail="Not superuser!")
-    if not is_verified:
-        raise HTTPException(status_code=HTTP_403_FORBIDDEN, detail="Email not verified!")
-
-    (key, url) = cdn_repo.form_book_insert_data(prefix=book.key)
-    book = BookCreateModel(key=key, url=url, name_ru=book.name_ru, description=book.description)
+    
+    shared = cdn_repo.form_book_insert_data(folder=book.object_key)
+    object_key = list(shared[0].keys())[0]
+    url = shared[0][object_key]
+    book.object_key = object_key
+    book = BookCreateModel(**book.dict(), url=url)
     response = await db_repo.insert_book(book=book)
 
     return response
@@ -107,16 +94,10 @@ async def create_public_book(
 async def create_public_video(
     video: VideoPostModelYT = Body(...),
     db_repo: PublicDBRepository = Depends(get_db_repository(PublicDBRepository)),
-    user: UserInDB = Depends(get_user_from_token),
-    is_superuser = Depends(is_superuser),
-    is_verified = Depends(is_verified),
+    allowed: bool = Depends(allowed_or_denied),
     ) -> VideoInDB:
-    if not user.is_superuser:
-        raise HTTPException(status_code=HTTP_403_FORBIDDEN, detail="Not superuser!")
-    if not is_verified:
-        raise HTTPException(status_code=HTTP_403_FORBIDDEN, detail="Email not verified!")
 
-    video = VideoCreateModel(url=video.url, name_ru=video.name_ru, description=video.description, key=None)
+    video = VideoCreateModel(**video.dict(), object_key=None)
     response = await db_repo.insert_video(video=video, parse_link=True)
 
     return response
@@ -126,17 +107,14 @@ async def create_public_video(
     video: VideoPostModelCDN = Body(...),
     db_repo: PublicDBRepository = Depends(get_db_repository(PublicDBRepository)),
     cdn_repo: PublicYandexCDNRepository = Depends(get_cdn_repository(PublicYandexCDNRepository)),
-    user: UserInDB = Depends(get_user_from_token),
-    is_superuser = Depends(is_superuser),
-    is_verified = Depends(is_verified),
+    allowed: bool = Depends(allowed_or_denied),
     ) -> VideoInDB:
-    if not user.is_superuser:
-        raise HTTPException(status_code=HTTP_403_FORBIDDEN, detail="Not superuser!")
-    if not is_verified:
-        raise HTTPException(status_code=HTTP_403_FORBIDDEN, detail="Email not verified!")
 
-    (key, url) = cdn_repo.form_video_insert_data(prefix=video.key)
-    video = VideoCreateModel(key=key, url=url, name_ru=video.name_ru, description=video.description)
+    shared = cdn_repo.form_video_insert_data(folder=video.object_key)
+    object_key = list(shared[0].keys())[0]
+    url = shared[0][object_key]
+    video.object_key = object_key
+    video = VideoCreateModel(**video.dict(), url=url)
     response = await db_repo.insert_video(video=video)
 
     return response
@@ -145,34 +123,57 @@ async def create_public_video(
 async def create_public_game(
     game: GamePostModel = Body(...),
     db_repo: PublicDBRepository = Depends(get_db_repository(PublicDBRepository)),
-    user: UserInDB = Depends(get_user_from_token),
-    is_superuser = Depends(is_superuser),
-    is_verified = Depends(is_verified),
+    cdn_repo: PublicYandexCDNRepository = Depends(get_cdn_repository(PublicYandexCDNRepository)),
+    allowed: bool = Depends(allowed_or_denied),
     ) -> GameInDB:
-    if not user.is_superuser:
-        raise HTTPException(status_code=HTTP_403_FORBIDDEN, detail="Not superuser!")
-    if not is_verified:
-        raise HTTPException(status_code=HTTP_403_FORBIDDEN, detail="Email not verified!")
 
+    shared = cdn_repo.form_game_insert_data(folder=game.object_key)
+    object_key = list(shared[0].keys())[0]
+    url = shared[0][object_key]
+    game.object_key = object_key
+    game = GameCreateModel(**game.dict(), url=url)
     response = await db_repo.insert_game(game=game)
+
     return response
 
+@router.post("/quiz", response_model=QuizQuestionInDB, name="public:post-quiz", status_code=HTTP_201_CREATED)
+async def create_private_quiz(
+    quiz: QuizPostModel = Body(...),
+    db_repo: PublicDBRepository = Depends(get_db_repository(PublicDBRepository)),
+    cdn_repo: PublicYandexCDNRepository = Depends(get_cdn_repository(PublicYandexCDNRepository)),
+    allowed: bool = Depends(allowed_or_denied),
+    ) -> QuizQuestionInDB:
+
+    if quiz.object_key:
+        shared = cdn_repo.form_quiz_insert_data(folder=quiz.object_key)
+        object_key = list(shared[0].keys())[0]
+        url = shared[0][object_key]
+        quiz.object_key = object_key
+        quiz = QuizCreateModel(**quiz.dict(), image_url=url)
+    else:
+        quiz = QuizCreateModel(**quiz.dict(), image_url=None)
+    response = await db_repo.insert_quiz_question(quiz_question=quiz)
+
+    return response
+
+@router.post("/quiz/results", response_model=QuizResults, name="private:get-quiz-results", status_code=HTTP_200_OK)
+async def get_quiz_results(
+    quiz_results: QuizGetResultsModel = Body(...),
+    db_repo: PublicDBRepository = Depends(get_db_repository(PublicDBRepository)),
+    ) -> QuizResults:
+
+    response = await db_repo.check_quiz_results(quiz_results=quiz_results)
+
+    return response
 
 # AboutUs, FAQ and Instructions
-
 @router.post("/about_us", response_model=AboutUsInDB, name="public:post-about_us", status_code=HTTP_201_CREATED)
 async def create_about_us(
     about_us: AboutUsPostModel = Body(...),
     db_repo: PublicDBRepository = Depends(get_db_repository(PublicDBRepository)),
-    user: UserInDB = Depends(get_user_from_token),
-    is_superuser = Depends(is_superuser),
-    is_verified = Depends(is_verified),
+    allowed: bool = Depends(allowed_or_denied),
     ) -> AboutUsInDB:
-    if not user.is_superuser:
-        raise HTTPException(status_code=HTTP_403_FORBIDDEN, detail="Not superuser!")
-    if not is_verified:
-        raise HTTPException(status_code=HTTP_403_FORBIDDEN, detail="Email not verified!")
-
+    
     response = await db_repo.insert_about_us(about_us=about_us)
     return response
 
@@ -180,14 +181,8 @@ async def create_about_us(
 async def create_instructions(
     instruction: InstructionPostModel = Body(...),
     db_repo: PublicDBRepository = Depends(get_db_repository(PublicDBRepository)),
-    user: UserInDB = Depends(get_user_from_token),
-    is_superuser = Depends(is_superuser),
-    is_verified = Depends(is_verified),
+    allowed: bool = Depends(allowed_or_denied),
     ) -> InstructionInDB:
-    if not user.is_superuser:
-        raise HTTPException(status_code=HTTP_403_FORBIDDEN, detail="Not superuser!")
-    if not is_verified:
-        raise HTTPException(status_code=HTTP_403_FORBIDDEN, detail="Email not verified!")
 
     response = await db_repo.insert_instruction(instruction=instruction)
     return response
@@ -196,14 +191,8 @@ async def create_instructions(
 async def create_faq(
     faq: FAQPostModel = Body(...),
     db_repo: PublicDBRepository = Depends(get_db_repository(PublicDBRepository)),
-    user: UserInDB = Depends(get_user_from_token),
-    is_superuser = Depends(is_superuser),
-    is_verified = Depends(is_verified),
+    allowed: bool = Depends(allowed_or_denied),
     ) -> FAQInDB:
-    if not user.is_superuser:
-        raise HTTPException(status_code=HTTP_403_FORBIDDEN, detail="Not superuser!")
-    if not is_verified:
-        raise HTTPException(status_code=HTTP_403_FORBIDDEN, detail="Email not verified!")
 
     response = await db_repo.insert_faq(faq=faq)
     return response

@@ -17,13 +17,13 @@ def create_stored_procedures_update() -> None:
     # update grade functions
     op.execute("""
     CREATE OR REPLACE FUNCTION private.update_grade(int, varchar(20), text, text)
-        RETURNS TABLE (id int, name_en varchar(20), name_ru varchar(20), background text, background_key text)
+        RETURNS TABLE (id int, name_en varchar(20), name_ru varchar(20), background text, object_key text)
         AS $$
         BEGIN
         UPDATE private.grade SET 
         name_ru = COALESCE($2, private.grade.name_ru),
         background = COALESCE($3, private.grade.background),
-        background_key = COALESCE($4, private.grade.background_key)
+        object_key = COALESCE($4, private.grade.object_key)
         WHERE private.grade.id = $1;
         RETURN QUERY (SELECT * FROM private.grade WHERE private.grade.id = $1);
         END $$ LANGUAGE plpgsql;
@@ -32,13 +32,13 @@ def create_stored_procedures_update() -> None:
     # subject
     op.execute("""
     CREATE OR REPLACE FUNCTION private.update_subject(int, varchar(20), text, text)
-        RETURNS TABLE (id int, fk int, name_en varchar(20), name_ru varchar(20), background text, background_key text)
+        RETURNS TABLE (id int, fk int, name_en varchar(20), name_ru varchar(20), background text, object_key text)
         AS $$
         BEGIN
         UPDATE private.subject SET 
         name_ru = COALESCE($2, private.subject.name_ru),
         background = COALESCE($3, private.subject.background),
-        background_key = COALESCE($4, private.subject.background_key)
+        object_key = COALESCE($4, private.subject.object_key)
         WHERE private.subject.id = $1;
         RETURN QUERY (SELECT * FROM private.subject WHERE private.subject.id = $1);
         END $$ LANGUAGE plpgsql;
@@ -47,13 +47,13 @@ def create_stored_procedures_update() -> None:
     # branch
     op.execute("""
     CREATE OR REPLACE FUNCTION private.update_branch(int, varchar(20), text, text)
-        RETURNS TABLE (id int, fk int, name_en varchar(20), name_ru varchar(20), background text, background_key text)
+        RETURNS TABLE (id int, fk int, name_en varchar(20), name_ru varchar(20), background text, object_key text)
         AS $$
         BEGIN
         UPDATE private.branch SET 
         name_ru = COALESCE($2, private.branch.name_ru),
         background = COALESCE($3, private.branch.background),
-        background_key = COALESCE($4, private.branch.background_key)
+        object_key = COALESCE($4, private.branch.object_key)
         WHERE private.branch.id = $1;
         RETURN QUERY (SELECT * FROM private.branch WHERE private.branch.id = $1);
         END $$ LANGUAGE plpgsql;
@@ -62,14 +62,14 @@ def create_stored_procedures_update() -> None:
     # lecture
     op.execute("""
     CREATE OR REPLACE FUNCTION private.update_lecture(int, varchar(20), text, text, text)
-        RETURNS TABLE (id int, fk int, name_en varchar(20), name_ru varchar(20), description text, background text, background_key text)
+        RETURNS TABLE (id int, fk int, name_en varchar(20), name_ru varchar(20), description text, background text, object_key text)
         AS $$
         BEGIN
         UPDATE private.lecture SET 
         name_ru = COALESCE($2, private.lecture.name_ru),
         description = COALESCE($3, private.lecture.description),
         background = COALESCE($4, private.lecture.background),
-        background_key = COALESCE($5, private.lecture.background_key)
+        object_key = COALESCE($5, private.lecture.object_key)
         WHERE private.lecture.id = $1;
         RETURN QUERY (SELECT * FROM private.lecture WHERE private.lecture.id = $1);
         END $$ LANGUAGE plpgsql;
@@ -78,7 +78,7 @@ def create_stored_procedures_update() -> None:
     # video
     op.execute("""
     CREATE OR REPLACE FUNCTION private.update_video(int, varchar(20), text, text)
-        RETURNS TABLE (id int, url text, name_ru varchar(20), description text, key text)
+        RETURNS TABLE (id int, url text, name_ru varchar(20), description text, object_key text)
         AS $$
         BEGIN
         UPDATE private.video SET 

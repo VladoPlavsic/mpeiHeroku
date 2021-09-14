@@ -8,149 +8,142 @@ from app.cdn.repositories.public.public import PublicYandexCDNRepository
 from app.api.dependencies.database import get_db_repository
 from app.api.dependencies.cdn import get_cdn_repository
 
-from app.api.dependencies.auth import get_user_from_token, is_superuser, is_verified
+from app.api.dependencies.auth import allowed_or_denied
 
 from app.models.user import UserInDB
 
-
 router = APIRouter()
 
-@router.delete("/theory", name="public:delete-theory", status_code=HTTP_200_OK)
+@router.delete("/theory", response_model=None, name="public:delete-theory", status_code=HTTP_200_OK)
 async def delete_theory(
     db_repo: PublicDBRepository = Depends(get_db_repository(PublicDBRepository)),
     cdn_repo: PublicYandexCDNRepository = Depends(get_cdn_repository(PublicYandexCDNRepository)),
-    user: UserInDB = Depends(get_user_from_token),
-    is_superuser = Depends(is_superuser),
-    is_verified = Depends(is_verified),
-    ):
-    if not user.is_superuser:
-        raise HTTPException(status_code=HTTP_403_FORBIDDEN, detail="Not superuser!")
-    if not is_verified:
-        raise HTTPException(status_code=HTTP_403_FORBIDDEN, detail="Email not verified!")
+    allowed: bool = Depends(allowed_or_denied),
+    ) -> None:
 
-    response = await db_repo.delete_theory()
-    if response:
-        cdn_repo.delete_folder(prefix=response)
-        return {"Status": f"Successfully deleted {response} folder"}
+    deleted_key = await db_repo.delete_theory()
+    if deleted_key:
+        cdn_repo.delete_folder(folder=deleted_key)
 
-    return {"Status": "Failed deleting. Database doesn't containt any entries for theory"}
+    return None
 
-@router.delete("/practice", name="public:delete-practice", status_code=HTTP_200_OK)
+@router.delete("/practice", response_model=None, name="public:delete-practice", status_code=HTTP_200_OK)
 async def delete_practice(
     db_repo: PublicDBRepository = Depends(get_db_repository(PublicDBRepository)),
     cdn_repo: PublicYandexCDNRepository = Depends(get_cdn_repository(PublicYandexCDNRepository)),
-    user: UserInDB = Depends(get_user_from_token),
-    is_superuser = Depends(is_superuser),
-    is_verified = Depends(is_verified),
-    ):
-    if not user.is_superuser:
-        raise HTTPException(status_code=HTTP_403_FORBIDDEN, detail="Not superuser!")
-    if not is_verified:
-        raise HTTPException(status_code=HTTP_403_FORBIDDEN, detail="Email not verified!")
+    allowed: bool = Depends(allowed_or_denied),
+    ) -> None:
 
-    response = await db_repo.delete_practice()
-    if response:
-        cdn_repo.delete_folder(prefix=response)
-        return {"Status": f"Successfully deleted {response} folder"}
+    deleted_key = await db_repo.delete_practice()
+    if deleted_key:
+        cdn_repo.delete_folder(folder=deleted_key)
 
-    return {"Status": "Failed deleting. Database doesn't containt any entries for practice"}
+    return None
 
-@router.delete("/book", name="public:delete-book", status_code=HTTP_200_OK)
+@router.delete("/book", response_model=None, name="public:delete-book", status_code=HTTP_200_OK)
 async def delete_book(
     db_repo: PublicDBRepository = Depends(get_db_repository(PublicDBRepository)),
     cdn_repo: PublicYandexCDNRepository = Depends(get_cdn_repository(PublicYandexCDNRepository)),
-    user: UserInDB = Depends(get_user_from_token),
-    is_superuser = Depends(is_superuser),
-    is_verified = Depends(is_verified),
-    ):
-    if not user.is_superuser:
-        raise HTTPException(status_code=HTTP_403_FORBIDDEN, detail="Not superuser!")
-    if not is_verified:
-        raise HTTPException(status_code=HTTP_403_FORBIDDEN, detail="Email not verified!")
+    allowed: bool = Depends(allowed_or_denied),
+    ) -> None:
 
-    response = await db_repo.delete_book()
-    if response:
-        cdn_repo.delete_folder_by_inner_key(key=response)
-        return {"Status": f"Successfully deleted {response} and parent folder"}
+    deleted_key = await db_repo.delete_book()
+    if deleted_key:
+        cdn_repo.delete_folder_by_inner_key(inner_key=deleted_key)
 
-    return {"Status": "Failed deleting. Database doesn't containt any entries for book"}
+    return None
 
 
-@router.delete("/video/youtube", name="public:delete-video-youtube", status_code=HTTP_200_OK)
+@router.delete("/video", response_model=None, name="public:delete-video", status_code=HTTP_200_OK)
 async def delete_video(
     db_repo: PublicDBRepository = Depends(get_db_repository(PublicDBRepository)),
-    user: UserInDB = Depends(get_user_from_token),
-    is_superuser = Depends(is_superuser),
-    is_verified = Depends(is_verified),
-    ):
-    if not user.is_superuser:
-        raise HTTPException(status_code=HTTP_403_FORBIDDEN, detail="Not superuser!")
-    if not is_verified:
-        raise HTTPException(status_code=HTTP_403_FORBIDDEN, detail="Email not verified!")
+    cdn_repo: PublicYandexCDNRepository = Depends(get_cdn_repository(PublicYandexCDNRepository)),
+    allowed: bool = Depends(allowed_or_denied),
+    ) -> None:
+    
+    deleted_key = await db_repo.delete_video()
+    if deleted_key:
+        cdn_repo.delete_folder_by_inner_key(inner_key=deleted_key)
 
-    await db_repo.delete_video()
-    return {"Status": "All gucci"}
+    return None
+
+@router.delete("/quiz", response_model=None, name="public:delete-quiz", status_code=HTTP_200_OK)
+async def delete_quiz(
+    db_repo: PublicDBRepository = Depends(get_db_repository(PublicDBRepository)),
+    cdn_repo: PublicYandexCDNRepository = Depends(get_cdn_repository(PublicYandexCDNRepository)),
+    allowed: bool = Depends(allowed_or_denied),
+    ) -> None:
+
+    deleted_keys = await db_repo.delete_quiz()
+    if deleted_keys:
+        """We have a inconsistency here and in delete_quiz_question function. 
+    
+        In delete_quiz_question we are deleting folder containing object key is refering to,
+        here we are deleting only the object.
+        """
+        cdn_repo.delete_keys(list_of_keys=deleted_keys)
+
+    return None
+
+@router.delete("/quiz/question", response_model=None, name="public:delete-quiz", status_code=HTTP_200_OK)
+async def delete_quiz_question(
+    id: int,
+    db_repo: PublicDBRepository = Depends(get_db_repository(PublicDBRepository)),
+    cdn_repo: PublicYandexCDNRepository = Depends(get_cdn_repository(PublicYandexCDNRepository)),
+    allowed: bool = Depends(allowed_or_denied),
+    ) -> None:
+
+    deleted_key = await db_repo.delete_quiz_question(id=id)
+    if deleted_key:
+        """We have a inconsistency here and in delete_quiz function. 
+    
+        In delete_quiz we are deleting only the object that key is refering to,
+        here we are deleting folder containing that object.
+        """
+        cdn_repo.delete_folder_by_inner_key(inner_key=deleted_key)
+
+    return None
 
 
-@router.delete("/game", name="public:delete-game", status_code=HTTP_200_OK)
+@router.delete("/game", response_model=None, name="public:delete-game", status_code=HTTP_200_OK)
 async def delete_game(
     db_repo: PublicDBRepository = Depends(get_db_repository(PublicDBRepository)),
-    user: UserInDB = Depends(get_user_from_token),
-    is_superuser = Depends(is_superuser),
-    is_verified = Depends(is_verified),
-    ):
-    if not user.is_superuser:
-        raise HTTPException(status_code=HTTP_403_FORBIDDEN, detail="Not superuser!")
-    if not is_verified:
-        raise HTTPException(status_code=HTTP_403_FORBIDDEN, detail="Email not verified!")
+    cdn_repo: PublicYandexCDNRepository = Depends(get_cdn_repository(PublicYandexCDNRepository)),
+    allowed: bool = Depends(allowed_or_denied),   
+    ) -> None:
 
-    await db_repo.delete_game()
-    return {"Status": "All gucci"}
+    deleted_key = await db_repo.delete_game()
+    if deleted_key:
+        cdn_repo.delete_folder_by_inner_key(inner_key=deleted_key)
+    
+    return None
 
-@router.delete("/about_us", name="public:delete-about_us", status_code=HTTP_200_OK)
+@router.delete("/about_us", response_model=None, name="public:delete-about_us", status_code=HTTP_200_OK)
 async def delete_about_us(
     order_number: int,
     db_repo: PublicDBRepository = Depends(get_db_repository(PublicDBRepository)),
-    user: UserInDB = Depends(get_user_from_token),
-    is_superuser = Depends(is_superuser),
-    is_verified = Depends(is_verified),
-    ):
-    if not user.is_superuser:
-        raise HTTPException(status_code=HTTP_403_FORBIDDEN, detail="Not superuser!")
-    if not is_verified:
-        raise HTTPException(status_code=HTTP_403_FORBIDDEN, detail="Email not verified!")
+    allowed: bool = Depends(allowed_or_denied),
+    ) -> None:
 
     await db_repo.delete_about_us(order_number=order_number)
-    return {"Status": "All gucci"}
+    return None
 
-@router.delete("/faq", name="public:delete-faq", status_code=HTTP_200_OK)
+@router.delete("/faq", response_model=None, name="public:delete-faq", status_code=HTTP_200_OK)
 async def delete_faq(
     id: int,
     db_repo: PublicDBRepository = Depends(get_db_repository(PublicDBRepository)),
-    user: UserInDB = Depends(get_user_from_token),
-    is_superuser = Depends(is_superuser),
-    is_verified = Depends(is_verified),
-    ):
-    if not user.is_superuser:
-        raise HTTPException(status_code=HTTP_403_FORBIDDEN, detail="Not superuser!")
-    if not is_verified:
-        raise HTTPException(status_code=HTTP_403_FORBIDDEN, detail="Email not verified!")
+    allowed: bool = Depends(allowed_or_denied),
+    ) -> None:
 
     await db_repo.delete_faq(id=id)
-    return {"Status": "All gucci"}
+    return None
 
-@router.delete("/instructions", name="public:delete-instructions", status_code=HTTP_200_OK)
+@router.delete("/instructions", response_model=None, name="public:delete-instructions", status_code=HTTP_200_OK)
 async def delete_instruction(
     order_number: int,
     db_repo: PublicDBRepository = Depends(get_db_repository(PublicDBRepository)),
-    user: UserInDB = Depends(get_user_from_token),
-    is_superuser = Depends(is_superuser),
-    is_verified = Depends(is_verified),
-    ):
-    if not user.is_superuser:
-        raise HTTPException(status_code=HTTP_403_FORBIDDEN, detail="Not superuser!")
-    if not is_verified:
-        raise HTTPException(status_code=HTTP_403_FORBIDDEN, detail="Email not verified!")
+    allowed: bool = Depends(allowed_or_denied),
+    ) -> None:
 
     await db_repo.delete_instruction(order_number=order_number)
-    return {"Status": "All gucci"}
+    return None

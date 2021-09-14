@@ -1,9 +1,13 @@
-from fastapi import FastAPI, Depends, BackgroundTasks
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi_utils.tasks import repeat_every
 
+from starlette.requests import Request
+from starlette.responses import Response
+
 from app.api.routes import router as api_router
 from app.core import config, tasks
+from app.api.dependencies.email import send_message
 import requests
 
 import logging
@@ -20,7 +24,21 @@ def get_application():
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"]
-    ) 
+    )
+
+    # Send email on server error
+    async def catch_exceptions_middleware(request: Request, call_next):
+        try:
+            return await call_next(request)
+        except Exception as e:
+            send_message(subject="Server error", message_text=f"Error on server occured. {e}")
+            logger.error("----- 500 INTERNAL SERVER ERROR -----")
+            logger.error(e)
+            logger.error("----- 500 INTERNAL SERVER ERROR -----")
+            return Response("Internal server error", status_code=500)
+    
+    # Add middleware for sending error email
+    app.middleware('http')(catch_exceptions_middleware)
 
     app.add_event_handler("startup", tasks.create_start_app_handler(app))
     app.add_event_handler("shutdown", tasks.create_stop_app_handler(app))

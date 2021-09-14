@@ -1,8 +1,8 @@
-from app.db.repositories.parsers import list_to_string
+from app.db.repositories.parsers import list_to_string, string_or_null
 
-def select_grades_query(ids=None) -> str:
-    if ids:
-        available = ','.join(map(str,ids))
+def select_grades_query(identifications=None) -> str:
+    if identifications:
+        available = ','.join(map(str,identifications))
         return \
             f"SELECT (private.select_grades_by_ids('{available}')).*"
     else:
@@ -17,11 +17,10 @@ def get_grade_by_name_query(grade_name) -> str:
     return \
         f"SELECT (private.select_grade_by_name('{grade_name}')).*"
 
-
 # subject
-def select_subject_query(fk, ids=[]) -> str:
-    if ids:
-        available = ','.join(map(str,ids))
+def select_subject_query(fk, identifications=[]) -> str:
+    if identifications:
+        available = ','.join(map(str,identifications))
         return \
             f"SELECT (private.select_subjects_by_ids('{available}', {fk})).*"
     else:
@@ -88,7 +87,7 @@ def check_quiz_results_query(questions, answers) -> str:
     questions = list_to_string(questions)
     answers = list_to_string(answers)
     return \
-        f"SELECT * FROM private.check_quiz_success('{{{questions}}}'::int[], '{{{answers}}}'::int[]) AS (correct boolean[], answers text[], correct_answers text[], question_ids int[], answer_ids int[], question_numbers int[])"
+        f"SELECT * FROM private.check_quiz_success('{{{questions}}}'::int[], '{{{answers}}}'::int[]) AS (correct boolean[], answers text[], correct_answers text[], correct_answers_id int[], question_ids int[], answer_ids int[], question_numbers int[])"
 
 def select_all_material_keys_query(table) -> str:
     return \
@@ -113,6 +112,9 @@ def select_all_user_available_subjects_query(user_id: int) -> str:
     return \
         f"SELECT (users.select_all_user_available_subjects({user_id})).*"
 
+def check_if_content_available_query(user_id: int, grade_name: str, subject_name: str) -> str:
+    return \
+        f"SELECT users.check_if_content_available({user_id}, {string_or_null(grade_name, subject_name)}) AS available"
 
 # subscriptions
 # plans

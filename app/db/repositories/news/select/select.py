@@ -17,68 +17,42 @@ logger = logging.getLogger(__name__)
 
 class NewsDBSelectRepository(BaseDBRepository):
 
-    async def select_all_news(self) -> List[NewsAllModel]:
-        """
-        Returns list of keys for all news preview images in database
-        """
-        records = await self.__select_many(query=select_all_news_query())
+    async def select_news_images(self, *, fk: int) -> List[NewsImagesInDB]:
+        """Returns list of images (NewsImagesInDB) based on news foreign key they belong to."""
+        records = await self._fetch_many(query=select_images_for_news_query(fk=fk))
+        return [NewsImagesInDB(**record) for record in records]
 
-        response = [NewsAllModel(**record) for record in records]
-        return response
+    async def select_all_news(self) -> List[NewsAllModel]:
+        """Returns list of object_keys for all news preview images in database"""
+        records = await self._fetch_many(query=select_all_news_query())
+        return [NewsAllModel(**record) for record in records]
 
     async def select_all_news_images(self) -> List[NewsImagesAllModel]:
-        """
-        Returns list of keys for all news images in database
-        """
-        records = await self.__select_many(query=select_all_news_images_query())
-
-        response = [NewsImagesAllModel(**record) for record in records] 
-        return response
-
-
-    async def select_news_images(self, *, fk: int) -> List[NewsImagesInDB]:
-        images_records = await self.__select_many(query=select_images_for_news_query(fk=fk))
-        return [NewsImagesInDB(**image) for image in images_records]
+        """Returns list of object_keys for all news images in database"""
+        records = await self._fetch_many(query=select_all_news_images_query())
+        return [NewsImagesAllModel(**record) for record in records] 
 
     async def select_news_preview(self, *, start: int, count: int) -> List[NewsPreviewInDBModel]:
-        news_records = await self.__select_many(query=select_news_preview_query(start=start, count=count))
-        response = [NewsPreviewInDBModel(**news) for news in news_records]
-
-        return response
+        """Returns list of preview images (NewsPreviewInDBModel) from db.
+        
+        Keyword arguments:
+        start -- starting offset for images 
+        count -- number of images to fetch
+            (e.g. If there is 15 images, and we want 12-14 we would set these parameters to be:
+                start = 11
+                count = 3)
+        """
+        records = await self._fetch_many(query=select_news_preview_query(start=start, count=count))
+        return [NewsPreviewInDBModel(**record) for record in records]
 
     async def select_news(self, *, date: str, url: str) -> NewsInDBModel:
-        news = await self.__select_one(query=select_news_query(date=date, url=url))
+        news = await self._fetch_one(query=select_news_query(date=date, url=url))
         if not news:
             raise HTTPException(status_code=404, detail=f"News not found!")
-        response = NewsInDBModel(**news, images=[])
 
-        response.images = await self.select_news_images(fk=response.id)
-
-        return response
+        images = await self.select_news_images(fk=news['id'])
+        return NewsInDBModel(**news, images=images)
 
     async def get_news_count(self) -> int:
-        response = await self.__select_one(query=get_news_count_query())
-
+        response = await self._fetch_one(query=get_news_count_query())
         return response['count']
-
-    async def __select_one(self, *, query):
-        try:
-            response = await self.db.fetch_one(query=query)
-        except Exception as e:
-            logger.error("--- ERROR SELECTING NEWS ---")                
-            logger.error(e)
-            logger.error("--- ERROR SELECTING NEWS ---")                
-            raise HTTPException(status_code=400, detail=f"Unhandled error. Exiter with {e}")
-
-        return response
-
-    async def __select_many(self, *, query):
-        try:
-            response = await self.db.fetch_all(query=query)
-        except Exception as e:
-            logger.error("--- ERROR SELECTING NEWS ---")                
-            logger.error(e)
-            logger.error("--- ERROR SELECTING NEWS ---")                
-            raise HTTPException(status_code=400, detail=f"Unhandled error. Exiter with {e}")
-
-        return response

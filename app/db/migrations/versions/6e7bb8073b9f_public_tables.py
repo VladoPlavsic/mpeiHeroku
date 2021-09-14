@@ -14,39 +14,60 @@ branch_labels = None
 depends_on = None
 
 def create_public_content_tables() -> None:
-    op.create_table('game',
-    sa.Column('name_ru', sa.String(length=100), nullable=False),
-    sa.Column('url', sa.Text, nullable=False),
-    sa.Column('description', sa.Text(), nullable=True),
-    sa.UniqueConstraint('url'),
-    schema='public'
-    )
     op.create_table('video',
     sa.Column('name_ru', sa.String(length=100), nullable=False),
     sa.Column('url', sa.Text, nullable=False),
     sa.Column('description', sa.Text(), nullable=True),
+    sa.Column('object_key', sa.Text(), nullable=True),
     sa.UniqueConstraint('url'),
     schema='public'
     )
-    # CDN Content
+    op.create_table('game',
+    sa.Column('name_ru', sa.String(length=100), nullable=False),
+    sa.Column('url', sa.Text, nullable=False),
+    sa.Column('description', sa.Text(), nullable=True),
+    sa.Column('object_key', sa.Text(), nullable=False),
+    sa.UniqueConstraint('url'),
+    schema='public'
+    )
     op.create_table('book',
     sa.Column('name_ru', sa.String(length=100), nullable=False),
     sa.Column('url', sa.Text, nullable=False),
     sa.Column('description', sa.Text(), nullable=True),
-    sa.Column('key', sa.Text(), nullable=False),
+    sa.Column('object_key', sa.Text(), nullable=False),
     sa.UniqueConstraint('url'),
     schema='public'
     )
     op.create_table('practice',
     sa.Column('name_ru', sa.String(length=100), nullable=False),
     sa.Column('description', sa.Text, nullable=True),
-    sa.Column('key', sa.Text(), nullable=False),
+    sa.Column('object_key', sa.Text(), nullable=False),
     schema='public'
     )
     op.create_table('theory',
     sa.Column('name_ru', sa.String(length=100), nullable=False),
     sa.Column('description', sa.Text, nullable=True),
-    sa.Column('key', sa.Text(), nullable=False),
+    sa.Column('object_key', sa.Text(), nullable=False),
+    schema='public'
+    )
+    op.create_table(
+    "quiz_questions",
+    sa.Column("id", sa.Integer, primary_key=True),
+    sa.Column("order_number", sa.Integer, nullable=False),
+    sa.Column("question", sa.Text, nullable=True),
+    sa.Column("object_key", sa.Text, nullable=True),
+    sa.Column("image_url", sa.Text, nullable=True),
+    sa.UniqueConstraint('order_number'),
+    schema='public'
+    )
+    # answers tables
+    op.create_table(
+    "quiz_answers",
+    sa.Column("id", sa.Integer, primary_key=True),
+    sa.Column("fk", sa.Integer, nullable=False),
+    sa.Column("answer", sa.Text, nullable=False),
+    sa.Column("is_true", sa.Boolean, nullable=True),
+    sa.ForeignKeyConstraint(['fk'], ['public.quiz_questions.id'], onupdate="CASCADE", ondelete='CASCADE'),
     schema='public'
     )
     # ###
@@ -55,28 +76,28 @@ def create_public_content_tables() -> None:
     op.create_table('practice_audio',
     sa.Column('order', sa.Integer(), nullable=False),
     sa.Column('url', sa.Text, nullable=False),
-    sa.Column('key', sa.Text(), nullable=False),
+    sa.Column('object_key', sa.Text(), nullable=False),
     sa.UniqueConstraint('order'),
     schema='public'
     )
     op.create_table('practice_image',
     sa.Column('order', sa.Integer(), nullable=False),
     sa.Column('url', sa.Text, nullable=False),
-    sa.Column('key', sa.Text(), nullable=False),
+    sa.Column('object_key', sa.Text(), nullable=False),
     sa.UniqueConstraint('order'),
     schema='public'
     )
     op.create_table('theory_audio',
     sa.Column('order', sa.Integer(), nullable=False),
     sa.Column('url', sa.Text, nullable=False),
-    sa.Column('key', sa.Text(), nullable=False),
+    sa.Column('object_key', sa.Text(), nullable=False),
     sa.UniqueConstraint('order'),
     schema='public'
     )
     op.create_table('theory_image',
     sa.Column('order', sa.Integer(), nullable=False),
     sa.Column('url', sa.Text, nullable=False),
-    sa.Column('key', sa.Text(), nullable=False),
+    sa.Column('object_key', sa.Text(), nullable=False),
     sa.UniqueConstraint('order'),
     schema='public'
     )
@@ -121,7 +142,9 @@ def drop_public_tables() -> None:
         'theory',
         'about_us',
         'faq',
-        'instruction'
+        'instruction',
+        'quiz_answers',
+        'quiz_questions',
     ]
 
     for table in tables:

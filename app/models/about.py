@@ -7,7 +7,7 @@ class TeamMemberBaseModel(BaseModel):
     name: str
     profession: str
     description: Optional[str]
-    photo_key: str
+    object_key: str
 
 class PostTeamMemberModel(TeamMemberBaseModel):
     pass
@@ -22,7 +22,7 @@ class TeamMemberInDBModel(TeamMemberBaseModel):
 class UpdateTeamMemberModel(BaseModel):
     id: int
     photo_link: Optional[str]
-    photo_key: Optional[str]
+    object_key: Optional[str]
     order: Optional[int]
     role: Optional[str]
     name: Optional[str]
