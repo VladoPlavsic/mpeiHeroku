@@ -37,3 +37,4 @@ def delete_faq_query(id) -> str:
 def delete_instruction_query(order_number) -> str:
     return \
         f"SELECT public.delete_instruction({order_number})"
+        

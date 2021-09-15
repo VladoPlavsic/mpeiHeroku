@@ -39,13 +39,13 @@ class PublicDBDeleteRepository(BaseDBRepository):
         return await self.__delete(query=delete_practice_query())
 
     async def delete_about_us(self, *, order_number) -> bool:
-        return await self.__delete(query=delete_about_us_query(order_number=order_number))
+        await self._execute_one(query=delete_about_us_query(order_number=order_number))
 
     async def delete_faq(self, *, id) -> bool:
-        return await self.__delete(query=delete_faq_query(id=id))
+        await self._execute_one(query=delete_faq_query(id=id))
 
     async def delete_instruction(self, *, order_number) -> bool:
-        return await self.__delete(query=delete_instruction_query(order_number=order_number))
+        await self._execute_one(query=delete_instruction_query(order_number=order_number))
 
     async def __delete(self, *, query) -> bool:
         """Executes query and tries to return deleted key or raise HTTPException"""
