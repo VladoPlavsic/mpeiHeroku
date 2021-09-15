@@ -110,7 +110,7 @@ async def user_login_with_email_and_password(
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    if not await user_repo.check_code(user_id=user.id, code=confirmation_code):
+    if not await user_repo.check_code(user_id=user.id, code=confirmation_code) or not confirmation_code:
         raise HTTPException(
             status_code=401,
             detail="Authentication was unsuccessful.",
