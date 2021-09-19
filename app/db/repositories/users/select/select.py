@@ -36,7 +36,7 @@ class UsersDBSelectRepository(BaseDBRepository):
     async def check_refresh_token(self, *, user: UserInDB, refresh_token: str) -> Optional[UserInDB]:
         user = await self.get_user_by_email(email=user.email)
         if user:
-            if user.jwt != refresh_token:
+            if user.jwt == refresh_token:
                 return user
         
         return None
