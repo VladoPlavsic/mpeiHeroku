@@ -19,7 +19,7 @@ class PublicDBDeleteRepository(BaseDBRepository):
     async def delete_quiz(self) -> str:
         """Deletes quiz entirely and returns list of deleted object_keys."""
         records = await self._fetch_many(query=delete_quiz_query())
-        return [record['object_key'] for record in records]
+        return [record['object_key'] for record in records if record['object_key']]
 
     async def delete_quiz_question(self, *, id) -> str:
         """Deletes quiz. Quiz does not have to have object_key!"""
