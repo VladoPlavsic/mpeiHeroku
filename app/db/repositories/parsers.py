@@ -19,7 +19,7 @@ def list_to_string(list_) -> str:
     list_ = str(list_)
     list_ = list_.replace('[','')
     list_ = list_.replace(']','')
-    list_ = list_.replace("'",'')
+    list_ = list_.replace("'",'"')
     return list_
 
 

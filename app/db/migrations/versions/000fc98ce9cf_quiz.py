@@ -114,10 +114,10 @@ def create_quiz_handling_functions() -> None:
 
     # delete entire quiz
     op.execute("""
-    CREATE OR REPLACE FUNCTION private.delete_all_quiz(fk INT)
+    CREATE OR REPLACE FUNCTION private.delete_all_quiz(fk_ INT)
     RETURNS setof TEXT
     AS $$
-        DELETE FROM private.quiz_questions WHERE private.quiz_questions.fk = fk RETURNING private.quiz_questions.object_key;
+        DELETE FROM private.quiz_questions WHERE private.quiz_questions.fk = fk_ RETURNING private.quiz_questions.object_key;
     $$ LANGUAGE sql;
     """)
 
