@@ -9,6 +9,7 @@ from app.db.repositories.parsers import *
 
 # insert models
 from app.models.public import VideoCreateModel
+from app.models.public import IntroVideoCreateModel
 from app.models.public import GameCreateModel
 from app.models.public import BookCreateModel
 from app.models.public import PresentationCreateModel
@@ -21,6 +22,7 @@ from app.models.public import InstructionCreateModel
 
 # response models
 from app.models.public import VideoInDB
+from app.models.public import IntroVideoInDB
 from app.models.public import GameInDB
 from app.models.public import BookInDB
 from app.models.public import PresentationInDB
@@ -41,7 +43,7 @@ class PublicDBInsertRepository(BaseDBRepository):
     """Insert data into public db schema."""
 
     async def insert_video(self, *, video: VideoCreateModel, parse_link=False) -> VideoInDB:
-        """Tries to insert video. If successful returns VideoInDB models else None.
+        """Tries to insert video. If successful returns VideoInDB model else None.
         
         Keyword arguments:
         video      -- VideoCreateModel
@@ -53,6 +55,14 @@ class PublicDBInsertRepository(BaseDBRepository):
 
         response = await self._fetch_one(query=insert_video_query(**video.dict()))
         return VideoInDB(**response) if response else None
+
+    async def insert_intro_video(self, *, video: IntroVideoCreateModel, parse_link=False) -> IntroVideoInDB:
+        """Same as insert video, only different table."""
+        if parse_link:
+            video.url = parse_youtube_link(link=video.url)
+        
+        response = await self._fetch_one(query=insert_intro_video_query(**video.dict()))
+        return IntroVideoInDB(**response) if response else None
 
     async def insert_game(self, *, game: GameCreateModel) -> GameInDB:
         """Tries to insert game. If successful returns GameInDB model else None."""

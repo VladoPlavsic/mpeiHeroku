@@ -67,6 +67,19 @@ async def delete_video(
 
     return None
 
+@router.delete("/intro/video", response_model=None, name="public:delete-intro-video", status_code=HTTP_200_OK)
+async def delete_intro_video(
+    db_repo: PublicDBRepository = Depends(get_db_repository(PublicDBRepository)),
+    cdn_repo: PublicYandexCDNRepository = Depends(get_cdn_repository(PublicYandexCDNRepository)),
+    allowed: bool = Depends(allowed_or_denied),
+    ) -> None:
+    
+    deleted_key = await db_repo.delete_intro_video()
+    if deleted_key:
+        cdn_repo.delete_folder_by_inner_key(inner_key=deleted_key)
+
+    return None
+
 @router.delete("/quiz", response_model=None, name="public:delete-quiz", status_code=HTTP_200_OK)
 async def delete_quiz(
     db_repo: PublicDBRepository = Depends(get_db_repository(PublicDBRepository)),

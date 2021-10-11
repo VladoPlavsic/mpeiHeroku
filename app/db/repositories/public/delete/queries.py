@@ -2,6 +2,10 @@ def delete_video_query() -> str:
     return \
         f"SELECT public.delete_video() AS object_key"
 
+def delete_intro_video_query() -> str:
+    return \
+        f"SELECT public.delete_intro_video() as object_key"
+
 def delete_book_query() -> str:
     return \
         f"SELECT public.delete_book() AS object_key"

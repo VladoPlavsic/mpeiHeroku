@@ -4,6 +4,10 @@ def select_material_query(table) -> str:
     return \
         f"SELECT (public.select_{table}()).*"
 
+def select_intro_video_query() -> str:
+    return \
+        f"SELECT (public.select_intro_video()).*"
+
 def select_material_parts_query(presentation, media_type) -> str:
     return \
         f"SELECT (public.select_{presentation}_{media_type}()).*"

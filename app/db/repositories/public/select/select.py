@@ -11,6 +11,7 @@ from app.models.public import BookInDB
 from app.models.public import GameInDB
 from app.models.public import PresentationInDB
 from app.models.public import VideoInDB
+from app.models.public import IntroVideoInDB
 from app.models.public import QuizInDB, QuizQuestionInDB, AnswersInDB, QuizGetResultsModel, QuizResults, QuizQuestionAnswerCorrectPair
 from app.models.public import PresentationMediaInDB
 from app.models.public import AboutUsInDB
@@ -112,9 +113,19 @@ class PublicDBSelectRepository(BaseDBRepository):
         response = await self._fetch_one(query=select_material_query(table=ContentType.VIDEO.value))
         return VideoInDB(**response) if response else None
 
+    async def select_intro_video(self) -> IntroVideoInDB:
+        """Returns VideoInDB (intro) from schema public"""
+        response = await self._fetch_one(query=select_intro_video_query())
+        return IntroVideoInDB(**response) if response else None
+
     async def select_all_video(self) -> List[MaterialAllModel]:
         """Returns list of object_keys for all video in database schema public"""
         records = await self._fetch_many(query=select_all_material_keys_query(table=ContentType.VIDEO.value))
+        return [MaterialAllModel(**record) for record in records if record['object_key']]
+
+    async def select_all_intro_video(self) -> List[MaterialAllModel]:
+        """Returns list of object_keys for all intro video in database schema public"""
+        records = await self._fetch_many(query=select_all_material_keys_query(table=ContentType.INTRO.value))
         return [MaterialAllModel(**record) for record in records if record['object_key']]
 
     async def select_presentation(self, *, presentation: ContentType) -> PresentationInDB:

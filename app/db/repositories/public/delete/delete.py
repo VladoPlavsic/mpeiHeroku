@@ -16,6 +16,11 @@ class PublicDBDeleteRepository(BaseDBRepository):
         response = await self._fetch_one(query=delete_video_query())
         return response['object_key'] if response else None
 
+    async def delete_intro_video(self) -> str:
+        """Deletes intro video. Intro video does not have to have object_key!"""
+        response = await self._fetch_one(query=delete_intro_video_query())
+        return response['object_key'] if response else None
+
     async def delete_quiz(self) -> str:
         """Deletes quiz entirely and returns list of deleted object_keys."""
         records = await self._fetch_many(query=delete_quiz_query())

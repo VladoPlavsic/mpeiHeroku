@@ -7,6 +7,7 @@ from app.db.repositories.base import BaseDBRepository
 
 # update models
 from app.models.public import UpdateVideoModel
+from app.models.public import UpdateIntroVideoModel
 from app.models.public import UpdateGameModel
 from app.models.public import UpdateBookModel
 from app.models.public import UpdatePresentationModel
@@ -16,6 +17,7 @@ from app.models.public import UpdateInstructionModel
 
 # response models
 from app.models.public import VideoInDB
+from app.models.public import IntroVideoInDB
 from app.models.public import GameInDB
 from app.models.public import BookInDB
 from app.models.public import PresentationMasterInDB
@@ -54,6 +56,18 @@ class PublicDBUpdateRepository(BaseDBRepository):
         keys = list(video.keys())
         links = list(video.values())
         await self._execute_one(query=update_video_links_query(keys=keys, links=links))
+
+    async def update_intro_video_links(self, *, video) -> None:
+        """Updates public intro video presigned urls by keys.
+        
+        Keyword arguemts;
+        video -- dictionary with:
+            key   -- objecy_key
+            value -- presigned url 
+        """
+        keys = list(video.keys())
+        links = list(video.values())
+        await self._execute_one(query=update_intro_video_links_query(keys=keys, links=links))
 
     async def update_game_links(self, *, game) -> None:
         """Updates public game presigned urls by keys.
@@ -100,6 +114,13 @@ class PublicDBUpdateRepository(BaseDBRepository):
         if not response:
             raise HTTPException(status_code=404, detail="Video not updated, nothing found in public video table.")
         return VideoInDB(**response)
+
+    async def update_intro_video(self, *, updated: UpdateIntroVideoModel) -> IntroVideoInDB:
+        """Updated public intro video"""
+        response = await self._fetch_one(query=update_intro_video_query(**updated.dict()))
+        if not response:
+            raise HTTPException(status_code=404, detail="Intro video not updated, nothing found in public video table.")
+        return IntroVideoInDB(**response)
 
     """ NEW """
     async def update_game(self, *, updated: UpdateGameModel) -> GameInDB:

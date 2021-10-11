@@ -105,6 +105,11 @@ async def update_sharing_links_function(
             updated = cdn_repo.get_sharing_links_from_objects(list_of_objects=public_video)
             await public_db_repo.update_video_links(video=updated)
 
+        public_intro_video = await public_db_repo.select_all_intro_video()
+        if public_intro_video:
+            updated = cdn_repo.get_sharing_links_from_objects(list_of_objects=public_intro_video)
+            await public_db_repo.update_intro_video_links(video=updated)
+
         public_game = await public_db_repo.select_all_game()
         if public_game:
             updated = cdn_repo.get_sharing_links_from_objects(list_of_objects=public_game)

@@ -14,6 +14,7 @@ from app.models.public import MaterialResponse
 from app.models.public import AboutUsAllResponse
 from app.models.public import FaqAllResponse
 from app.models.public import InstructionAllResponse
+from app.models.public import IntroVideoAllResponse
 
 router = APIRouter()
 
@@ -24,6 +25,14 @@ async def get_public_material(
 
     response = await db_repo.select_material()
     return MaterialResponse(material=response)
+
+@router.get("/intro/video", response_model=IntroVideoAllResponse, name="public:get-intro-video", status_code=HTTP_200_OK)
+async def get_intro_video(
+    db_repo: PublicDBRepository = Depends(get_db_repository(PublicDBRepository)),
+    ) -> IntroVideoAllResponse:
+
+    response = await db_repo.select_intro_video()
+    return IntroVideoAllResponse(intro=response)
 
 @router.get("/about_us", response_model=AboutUsAllResponse, name="public:get-about_us", status_code=HTTP_200_OK)
 async def get_about_us(

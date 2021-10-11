@@ -9,6 +9,10 @@ class MaterialCoreModel(DBCoreModel):
     name_ru: str
     description: str
 
+class MaterialOptionalCoreModel(DBCoreModel):
+    name_ru: Optional[str]
+    description: Optional[str]
+
 # video
 class VideoCoreModel(MaterialCoreModel):
     pass
@@ -244,3 +248,27 @@ class MaterialAllModel(DBCoreModel):
 class AudioImagesAllModel(DBCoreModel):
     order: int
     object_key: str
+
+# intro video
+class IntroVideoCoreModel(MaterialOptionalCoreModel):
+    pass
+
+class IntroVideoPostModelYT(IntroVideoCoreModel):
+    url: str
+
+class IntroVideoPostModelCDN(IntroVideoCoreModel):
+    object_key: str
+
+class IntroVideoCreateModel(IntroVideoCoreModel):
+    url: str
+    object_key: Optional[str]
+
+class IntroVideoInDB(IntroVideoCoreModel):
+    url: str
+    object_key: Optional[str]
+
+class UpdateIntroVideoModel(UpdateCoreModel):
+    pass
+
+class IntroVideoAllResponse(DBCoreModel):
+    intro: Optional[IntroVideoInDB]

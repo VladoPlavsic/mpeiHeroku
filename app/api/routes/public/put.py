@@ -12,6 +12,7 @@ from app.api.dependencies.auth import allowed_or_denied
 
 # import update models
 from app.models.public import UpdateVideoModel
+from app.models.public import UpdateIntroVideoModel
 from app.models.public import UpdateGameModel
 from app.models.public import UpdateBookModel
 from app.models.public import UpdatePresentationModel
@@ -21,6 +22,7 @@ from app.models.public import UpdateInstructionModel
 
 # import response models
 from app.models.public import VideoInDB
+from app.models.public import IntroVideoInDB
 from app.models.public import GameInDB
 from app.models.public import BookInDB
 from app.models.public import PresentationMasterInDB
@@ -43,6 +45,16 @@ async def update_video(
     ) -> VideoInDB:
 
     response = await db_repo.update_video(updated=updated)
+    return response
+
+@router.put("/intro/video", response_model=IntroVideoInDB, name="public:update-intro-video", status_code=HTTP_200_OK)
+async def update_intro_video(
+    updated: UpdateIntroVideoModel = Body(...),
+    db_repo: PublicDBRepository = Depends(get_db_repository(PublicDBRepository)),
+    allowed: bool = Depends(allowed_or_denied),
+    ) -> IntroVideoInDB:
+
+    response = await db_repo.update_intro_video(updated=updated)
     return response
 
 @router.put("/game", response_model=GameInDB, name="public:update-game", status_code=HTTP_200_OK)

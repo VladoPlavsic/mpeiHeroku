@@ -12,6 +12,10 @@ def insert_video_query(name_ru, url, description, object_key) -> str:
     return \
         f"SELECT (public.insert_video({string_or_null(name_ru, url, description, object_key)})).*"
 
+def insert_intro_video_query(name_ru, url, description, object_key) -> str:
+    return \
+        f"SELECT (public.insert_intro_video({string_or_null(name_ru, url, description, object_key)})).*"
+
 def insert_book_query(name_ru, url, description, object_key) -> str:
     return \
         f"SELECT (public.insert_book({string_or_null(name_ru, url, description, object_key)})).*"

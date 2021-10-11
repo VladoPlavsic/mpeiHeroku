@@ -22,3 +22,4 @@ class ContentType(Enum):
     QUIZ = 'quiz'
     IMAGE = 'image'
     AUDIO = 'audio'
+    INTRO = "intro_video" # New

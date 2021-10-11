@@ -14,6 +14,8 @@ from app.models.public import PresentationPostModel
 from app.models.public import BookPostModel
 from app.models.public import VideoPostModelYT
 from app.models.public import VideoPostModelCDN
+from app.models.public import IntroVideoPostModelYT
+from app.models.public import IntroVideoPostModelCDN
 from app.models.public import GamePostModel
 from app.models.public import QuizPostModel, QuizGetResultsModel
 from app.models.public import AboutUsPostModel
@@ -24,6 +26,7 @@ from app.models.public import InstructionPostModel
 from app.models.public import PresentationCreateModel
 from app.models.public import BookCreateModel
 from app.models.public import VideoCreateModel
+from app.models.public import IntroVideoCreateModel
 from app.models.public import QuizCreateModel
 from app.models.public import GameCreateModel
 
@@ -31,6 +34,7 @@ from app.models.public import GameCreateModel
 from app.models.public import PresentationInDB
 from app.models.public import BookInDB
 from app.models.public import VideoInDB
+from app.models.public import IntroVideoInDB
 from app.models.public import GameInDB
 from app.models.public import QuizQuestionInDB, QuizResults
 from app.models.public import AboutUsInDB
@@ -94,8 +98,14 @@ async def create_public_book(
 async def create_public_video(
     video: VideoPostModelYT = Body(...),
     db_repo: PublicDBRepository = Depends(get_db_repository(PublicDBRepository)),
+    cdn_repo: PublicYandexCDNRepository = Depends(get_cdn_repository(PublicYandexCDNRepository)),
     allowed: bool = Depends(allowed_or_denied),
     ) -> VideoInDB:
+
+    # First delete video this way. The old way doesn't delete video from CDN !
+    deleted_key = await db_repo.delete_video()
+    if deleted_key:
+        cdn_repo.delete_folder_by_inner_key(inner_key=deleted_key)
 
     video = VideoCreateModel(**video.dict(), object_key=None)
     response = await db_repo.insert_video(video=video, parse_link=True)
@@ -110,12 +120,55 @@ async def create_public_video(
     allowed: bool = Depends(allowed_or_denied),
     ) -> VideoInDB:
 
+    deleted_key = await db_repo.delete_video()
+    if deleted_key:
+        cdn_repo.delete_folder_by_inner_key(inner_key=deleted_key)
+
     shared = cdn_repo.form_video_insert_data(folder=video.object_key)
     object_key = list(shared[0].keys())[0]
     url = shared[0][object_key]
     video.object_key = object_key
     video = VideoCreateModel(**video.dict(), url=url)
     response = await db_repo.insert_video(video=video)
+
+    return response
+
+@router.post("/intro/video/youtube", response_model=IntroVideoInDB, name="public:post-intro-video-yt", status_code=HTTP_201_CREATED)
+async def create_public_video(
+    video: IntroVideoPostModelYT = Body(...),
+    db_repo: PublicDBRepository = Depends(get_db_repository(PublicDBRepository)),
+    cdn_repo: PublicYandexCDNRepository = Depends(get_cdn_repository(PublicYandexCDNRepository)),
+    allowed: bool = Depends(allowed_or_denied),
+    ) -> IntroVideoInDB:
+
+    deleted_key = await db_repo.delete_intro_video()
+    print(deleted_key)
+    if deleted_key:
+        cdn_repo.delete_folder_by_inner_key(inner_key=deleted_key)
+
+    video = IntroVideoCreateModel(**video.dict(), object_key=None)
+    response = await db_repo.insert_intro_video(video=video, parse_link=True)
+
+    return response
+
+@router.post("/intro/video/cdn", response_model=IntroVideoInDB, name="public:post-intro-video-cdn", status_code=HTTP_201_CREATED)
+async def create_public_video(
+    video: IntroVideoPostModelCDN = Body(...),
+    db_repo: PublicDBRepository = Depends(get_db_repository(PublicDBRepository)),
+    cdn_repo: PublicYandexCDNRepository = Depends(get_cdn_repository(PublicYandexCDNRepository)),
+    allowed: bool = Depends(allowed_or_denied),
+    ) -> VideoInDB:
+
+    deleted_key = await db_repo.delete_intro_video()
+    if deleted_key:
+        cdn_repo.delete_folder_by_inner_key(inner_key=deleted_key)
+
+    shared = cdn_repo.form_video_insert_data(folder=video.object_key)
+    object_key = list(shared[0].keys())[0]
+    url = shared[0][object_key]
+    video.object_key = object_key
+    video = IntroVideoCreateModel(**video.dict(), url=url)
+    response = await db_repo.insert_intro_video(video=video)
 
     return response
 
