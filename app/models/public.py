@@ -166,6 +166,27 @@ class FAQPostModel(FAQCoreModel):
 class FAQInDB(FAQCoreModel):
     id: int
 
+# Reviews
+class ReviewCoreModel(DBCoreModel):
+    name: str
+    review: str
+    object_key: str
+
+class ReviewPostModel(ReviewCoreModel):
+    pass
+class ReviewCreateModel(ReviewCoreModel):
+    image_url: str
+
+class UpdateReviewModel(DBCoreModel):
+    id: int
+    name: Optional[str]
+    review: Optional[str]
+    object_key: Optional[str]
+    image_url: Optional[str]
+
+class ReviewInDB(ReviewCoreModel):
+    id: int
+    image_url: str
 
 
 class InstructionCoreModel(DBCoreModel):
@@ -200,6 +221,9 @@ class AboutUsAllResponse(DBCoreModel):
 
 class FaqAllResponse(DBCoreModel):
     faq: List[FAQInDB]
+
+class ReviewResponse(DBCoreModel):
+    reviews: List[ReviewInDB]
 
 class InstructionAllResponse(DBCoreModel):
     instructions: List[InstructionInDB]

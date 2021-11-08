@@ -48,7 +48,7 @@ def run_migrations_online() -> None:
         default_conn.execute("CREATE SCHEMA IF NOT EXISTS about")
         default_conn.execute("CREATE SCHEMA IF NOT EXISTS news")
         default_conn.execute("CREATE SCHEMA IF NOT EXISTS subscriptions")
-
+        default_conn.execute("CREATE SCHEMA IF NOT EXISTS history")
 
 
     # create private for live db

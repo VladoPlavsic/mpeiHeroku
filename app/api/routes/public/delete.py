@@ -160,3 +160,13 @@ async def delete_instruction(
 
     await db_repo.delete_instruction(order_number=order_number)
     return None
+
+@router.delete("/review", response_model=None, name="public:delete-review", status_code=HTTP_200_OK)
+async def delete_review(
+    id: int,
+    db_repo: PublicDBRepository = Depends(get_db_repository(PublicDBRepository)),
+    allowed: bool = Depends(allowed_or_denied),
+    ) -> None:
+
+    await db_repo.delete_review(id=id)
+    return None

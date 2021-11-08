@@ -21,6 +21,7 @@ from app.models.public import QuizPostModel, QuizGetResultsModel
 from app.models.public import AboutUsPostModel
 from app.models.public import FAQPostModel
 from app.models.public import InstructionPostModel
+from app.models.public import ReviewPostModel
 
 # create models 
 from app.models.public import PresentationCreateModel
@@ -29,6 +30,7 @@ from app.models.public import VideoCreateModel
 from app.models.public import IntroVideoCreateModel
 from app.models.public import QuizCreateModel
 from app.models.public import GameCreateModel
+from app.models.public import ReviewCreateModel
 
 # response models
 from app.models.public import PresentationInDB
@@ -40,6 +42,7 @@ from app.models.public import QuizQuestionInDB, QuizResults
 from app.models.public import AboutUsInDB
 from app.models.public import FAQInDB
 from app.models.public import InstructionInDB
+from app.models.public import ReviewInDB
 
 from app.cdn.types import DefaultFormats
 
@@ -248,4 +251,17 @@ async def create_faq(
     ) -> FAQInDB:
 
     response = await db_repo.insert_faq(faq=faq)
+    return response
+
+@router.post("/review", response_model=ReviewInDB, name="public:post-review", status_code=HTTP_201_CREATED)
+async def create_review(
+    review: ReviewPostModel = Body(...),
+    db_repo: PublicDBRepository = Depends(get_db_repository(PublicDBRepository)),
+    cdn_repo: PublicYandexCDNRepository = Depends(get_cdn_repository(PublicYandexCDNRepository)),
+    allowed: bool = Depends(allowed_or_denied),
+    ) -> ReviewInDB:
+    
+    shared = cdn_repo.get_sharing_link_from_object_key(object_key=review.object_key)
+    review = ReviewCreateModel(**review.dict(), image_url=shared[review.object_key])
+    response = await db_repo.insert_review(review=review)
     return response

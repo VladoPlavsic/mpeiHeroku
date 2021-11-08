@@ -4,6 +4,7 @@ from app.db.repositories.users.insert.queries import *
 
 from app.models.user import UserCreate
 from app.models.user import UserInDB, UserInDB
+from app.models.private import SubscriptionInformation
 
 class UsersDBInsertRepository(BaseDBRepository):
 
@@ -29,7 +30,7 @@ class UsersDBInsertRepository(BaseDBRepository):
     async def verify_email(self, *, user_id: int):
         await self._execute_one(query=verify_email_query(user_id=user_id))
 
-    async def add_product_to_user(self, *, user_id: int, product_id: int, subscription_fk: int , level: int):
+    async def add_product_to_user(self, *, user_id: int, product_id: int, subscription_fk: int , level: int) -> SubscriptionInformation:
         """We add one of our products to user.
 
         Keyword params:
@@ -41,9 +42,11 @@ class UsersDBInsertRepository(BaseDBRepository):
             1 - subjects
         """
         if not level:
-            await self._execute_one(query=add_grade_to_user_query(user_id=user_id, grade_id=product_id, subscription_fk=subscription_fk))
+            response = await self._fetch_one(query=add_grade_to_user_query(user_id=user_id, grade_id=product_id, subscription_fk=subscription_fk))
         else:
-            await self._execute_one(query=add_subject_to_user_query(user_id=user_id, subject_id=product_id, subscription_fk=subscription_fk))
+            response = await self._fetch_one(query=add_subject_to_user_query(user_id=user_id, subject_id=product_id, subscription_fk=subscription_fk))
+
+        return SubscriptionInformation(**response) if response else None
 
     async def set_confirmation_code(self, *, user_id: int, confirmation_code: str) -> str:
         response = await self._fetch_one(query=set_confirmation_code_query(user_id=user_id, confirmation_code=confirmation_code))

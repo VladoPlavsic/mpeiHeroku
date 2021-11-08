@@ -43,6 +43,9 @@ async def register_new_user(
     registred = await db_repo.register_new_user(new_user=new_user)
 
     if registred and not isinstance(registred, UserInDB):
+        # TODO: If user is registered how do we guarantee that he will confirm email before JWT has expired?
+        # If we enter here, we need to check if we can get user from JWT if the error sais expired -> create new JWT for user, and update in db!
+
         # if email is taken but not confirmed, resend confirmation email
         background_tasks.add_task(send_message, subject="Email confirmation. MPEI kids", message_text=create_confirm_link(token=registred, username=new_user.full_name), to=new_user.email)
         raise HTTPException(
@@ -172,10 +175,16 @@ async def subscription_notification_hnd(
         if not payment_object:
             background_tasks.add_task(send_message, subject="Payment confirmation failed. Required assistence.", message_text=f"There was error in confirming payment request. This might have happened because there was no recorded payment request with given payment ID when the notification was raised. Notification detail: {notification}")
             return None
-            
+        
         product = await user_repo.get_offer_details(level=int(payment_object.level), offer_fk=payment_object.offer_fk)
         # add product
-        await user_repo.add_product_to_user(user_id=payment_object.user_fk, product_id=product.product_fk, subscription_fk=payment_object.offer_fk, level=int(payment_object.level))
+        subscription_details = await user_repo.add_product_to_user(user_id=payment_object.user_fk, product_id=product.product_fk, subscription_fk=payment_object.offer_fk, level=int(payment_object.level))
+        user = await user_repo.get_user_by_id(user_id=payment_object.user_fk)
+        if subscription_details.for_life:
+            background_tasks.add_task(send_message, subject="Payment confirmation.", message_text=f"Payment successfully processed. You have access to {subscription_details.plan_name} for life.", to=user.email)
+        else:
+            background_tasks.add_task(send_message, subject="Payment confirmation.", message_text=f"Payment successfully processed. You have access to {subscription_details.plan_name} until {subscription_details.expiration_date}", to=user.email)
+
         await user_repo.delete_pending_subscription(payment_id=notification["object"]["id"])
    
     elif notification["event"] == "payment.canceled":

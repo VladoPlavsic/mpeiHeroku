@@ -52,6 +52,9 @@ class PublicDBDeleteRepository(BaseDBRepository):
     async def delete_instruction(self, *, order_number) -> bool:
         await self._execute_one(query=delete_instruction_query(order_number=order_number))
 
+    async def delete_review(self, *, id) -> bool:
+        await self._execute_one(query=delete_review_query(id=id))
+
     async def __delete(self, *, query) -> bool:
         """Executes query and tries to return deleted key or raise HTTPException"""
         response = await self._fetch_one(query=query)

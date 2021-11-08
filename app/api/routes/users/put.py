@@ -30,23 +30,25 @@ async def user_buy_grade_access(
     Configuration.account_id = YOOMONEY_ACCOUNT_ID
     Configuration.secret_key = YOOMONEY_SECRET_KEY
 
-    payment_id = await user_repo.check_payment_request(user_fk=user.id, offer_fk=offer_fk, level=0)
+    #payment_id = await user_repo.check_payment_request(user_fk=user.id, offer_fk=offer_fk, level=0)
 
-    if not payment_id:
-        payment = Payment.create({
-            "amount": {
-                "value": plan_details.price,
-                "currency": "RUB"
-            },
-            "confirmation":{
-                "type": "embedded",
-            },
-            "capture": True,
-            "description": plan_details.name
-        }, uuid.uuid4())
-        await user_repo.create_payment_request(user_fk=user.id, offer_fk=offer_fk, payment_id=payment.id, level=0)
-    else:
-        payment = Payment.find_one(payment_id)
+    #if not payment_id:
+    payment = Payment.create({
+        "amount": {
+            "value": plan_details.price,
+            "currency": "RUB"
+        },
+        "confirmation":{
+            "type": "embedded",
+        },
+        "capture": True,
+        "description": plan_details.name
+    }, uuid.uuid4())
+    await user_repo.create_payment_request(user_fk=user.id, offer_fk=offer_fk, payment_id=payment.id, level=0, confirmation_token=payment.confirmation.confirmation_token)
+    #else:
+    #    request_details = await user_repo.get_payment_request(payment_id=payment_id)
+    #    payment = Payment.find_one(payment_id)
+    #    payment = {"confirmation": {"confirmation_token": request_details.confirmation_token, "type": "embedded"}, "amount": payment.amount, "description": payment.description}
 
     return payment
 
@@ -64,23 +66,25 @@ async def user_buy_subject_access(
     Configuration.account_id = YOOMONEY_ACCOUNT_ID
     Configuration.secret_key = YOOMONEY_SECRET_KEY
 
-    payment_id = await user_repo.check_payment_request(user_fk=user.id, offer_fk=offer_fk, level=1)
+    #payment_id = await user_repo.check_payment_request(user_fk=user.id, offer_fk=offer_fk, level=1)
 
-    if not payment_id:
-        payment = Payment.create({
-            "amount": {
-                "value": plan_details.price,
-                "currency": "RUB"
-            },
-            "confirmation":{
-                "type": "embedded",
-            },
-            "capture": True,
-            "description": plan_details.name
-        }, uuid.uuid4())
-        await user_repo.create_payment_request(user_fk=user.id, offer_fk=offer_fk, payment_id=payment.id, level=1)
-    else:
-        payment = Payment.find_one(payment_id)
+    #if not payment_id:
+    payment = Payment.create({
+        "amount": {
+            "value": plan_details.price,
+            "currency": "RUB"
+        },
+        "confirmation":{
+            "type": "embedded",
+        },
+        "capture": True,
+        "description": plan_details.name
+    }, uuid.uuid4())
+    await user_repo.create_payment_request(user_fk=user.id, offer_fk=offer_fk, payment_id=payment.id, level=1, confirmation_token=payment.confirmation.confirmation_token)
+    #else:
+    #    request_details = await user_repo.get_payment_request(payment_id=payment_id)
+    #    payment = Payment.find_one(payment_id)
+    #    payment = {"confirmation": {"confirmation_token": request_details.confirmation_token, "type": "embedded"}, "amount": payment.amount, "description": payment.description}
 
     return payment
 

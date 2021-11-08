@@ -64,18 +64,18 @@ def create_handling_functions() -> None:
     BEGIN
         IF (SELECT month_count FROM subscriptions.grade_subscription_plans WHERE id = i_subscription_fk) > 0 THEN
             IF (SELECT expiration_date FROM users.user_grades WHERE user_fk = i_user_id) > now() THEN
-                INSERT INTO users.user_grades(user_fk, grade_fk, expiration_date, for_life) VALUES (i_user_id, i_grade_id, (SELECT expiration_date FROM users.user_grades WHERE user_fk = i_user_id) + interval '1 month' * (SELECT month_count FROM subscriptions.grade_subscription_plans WHERE id = i_subscription_fk), 'f');
+                UPDATE users.user_grades SET expiration_date = (SELECT expiration_date FROM users.user_grades WHERE user_fk = i_user_id) + interval '1 month' * (SELECT month_count FROM subscriptions.grade_subscription_plans WHERE id = i_subscription_fk) WHERE user_fk = i_user_id AND grade_fk = i_grade_id;
             ELSE
                 INSERT INTO users.user_grades(user_fk, grade_fk, expiration_date, for_life) VALUES (i_user_id, i_grade_id, now() + interval '1 month' * (SELECT month_count FROM subscriptions.grade_subscription_plans WHERE id = i_subscription_fk), 'f');
             END IF;
         ELSE
-            INSERT INTO users.user_grades(user_fk, grade_fk, expiration_date, for_life) VALUES (i_user_id, i_grade_id, now(), 't');
+            INSERT INTO users.user_grades(user_fk, grade_fk, expiration_date, for_life) VALUES (i_user_id, i_grade_id, now(), 't') ON CONFLICT ON CONSTRAINT user_grades_user_fk_grade_fk_key DO UPDATE SET for_life = 't';
         END IF;
         SELECT subscriptions.subject_subscription_plans.id INTO i_subject_sub_fk FROM subscriptions.subject_subscription_plans WHERE month_count = (SELECT month_count FROM subscriptions.grade_subscription_plans WHERE id = i_subscription_fk);
         FOR temprow IN
             SELECT id FROM private.subject WHERE private.subject.fk = i_grade_id
         LOOP
-            SELECT users.add_subject_to_user(i_user_id, temprow.id, i_subject_sub_fk);
+            PERFORM users.add_subject_to_user(i_user_id, temprow.id, i_subject_sub_fk);
         END LOOP;
     END $$ LANGUAGE plpgsql;
     """)
@@ -87,12 +87,12 @@ def create_handling_functions() -> None:
     BEGIN
         IF (SELECT month_count FROM subscriptions.subject_subscription_plans WHERE id = i_subscription_fk) > 0 THEN
             IF (SELECT expiration_date FROM users.user_subjects WHERE user_fk = i_user_id) > now() THEN
-                INSERT INTO users.user_subjects(user_fk, subject_fk, expiration_date, for_life) VALUES (i_user_id, i_subject_id, (SELECT expiration_date FROM users.user_subjects WHERE user_fk = i_user_id) + interval '1 month' * (SELECT month_count FROM subscriptions.grade_subscription_plans WHERE id = i_subscription_fk), 'f');
+                UPDATE users.user_subjects SET expiration_date = (SELECT expiration_date FROM users.user_subjects WHERE user_fk = i_user_id) + interval '1 month' * (SELECT month_count FROM subscriptions.subject_subscription_plans WHERE id = i_subscription_fk) WHERE user_fk = i_user_id AND subject_fk = i_subject_id;
             ELSE
-                INSERT INTO users.user_subjects(user_fk, subject_fk, expiration_date, for_life) VALUES (i_user_id, i_subject_id, now() + interval '1 month' * (SELECT month_count FROM subscriptions.grade_subscription_plans WHERE id = i_subscription_fk), 'f');
+                INSERT INTO users.user_subjects(user_fk, subject_fk, expiration_date, for_life) VALUES (i_user_id, i_subject_id, now() + interval '1 month' * (SELECT month_count FROM subscriptions.subject_subscription_plans WHERE id = i_subscription_fk), 'f');
             END IF;
         ELSE
-            INSERT INTO users.user_subjects(user_fk, subject_fk, expiration_date, for_life) VALUES (i_user_id, i_subject_id, now(), 't');
+            INSERT INTO users.user_subjects(user_fk, subject_fk, expiration_date, for_life) VALUES (i_user_id, i_subject_id, now(), 't') ON CONFLICT ON CONSTRAINT user_subjects_user_fk_subject_fk_key DO UPDATE SET for_life = 't';
         END IF;
     END $$ LANGUAGE plpgsql;
     """)

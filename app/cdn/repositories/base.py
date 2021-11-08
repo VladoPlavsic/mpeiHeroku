@@ -227,10 +227,10 @@ class BaseCDNRepository:
         """This function creates presigned sharing urls for quiz.
         
         Keyword arguments:
-        folder -- s3 key containing given book.
+        folder -- s3 key containing given quiz.
         
         Returns list of dictionaries with:
-        key   -- s3 key of a book
+        key   -- s3 key of a quiz
         value -- presigned url for given key
         """
         return self.__share_data(folder=folder, type_=DefaultFormats.QUIZ)

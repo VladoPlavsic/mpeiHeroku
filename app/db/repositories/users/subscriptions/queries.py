@@ -1,8 +1,8 @@
 from app.db.repositories.parsers import string_or_null
 
-def create_payment_request_query(user_fk: int, offer_fk: int, payment_id: str, level: int):
+def create_payment_request_query(user_fk: int, offer_fk: int, payment_id: str, level: int, confirmation_token: str):
     return \
-        f"SELECT subscriptions.create_subscription_pending({user_fk}, {offer_fk}, {string_or_null(payment_id)}, {level})"
+        f"SELECT subscriptions.create_subscription_pending({user_fk}, {offer_fk}, {string_or_null(payment_id)}, {level}, {string_or_null(confirmation_token)})"
 
 def check_payment_request_query(user_fk: int, offer_fk: int, level: int):
     return \

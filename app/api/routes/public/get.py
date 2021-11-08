@@ -15,6 +15,7 @@ from app.models.public import AboutUsAllResponse
 from app.models.public import FaqAllResponse
 from app.models.public import InstructionAllResponse
 from app.models.public import IntroVideoAllResponse
+from app.models.public import ReviewResponse
 
 router = APIRouter()
 
@@ -63,8 +64,15 @@ async def get_faq(
 
     return FaqAllResponse(faq=response)
 
+@router.get("/review", response_model=ReviewResponse, name="public:get-reviews", status_code=HTTP_200_OK)
+async def get_reviews(
+    public_repo: PublicDBRepository = Depends(get_db_repository(PublicDBRepository))
+    ) -> ReviewResponse:
 
-# TEMPORARY FOR WAKING SERVER
+    response = await public_repo.select_reivew()
+    return ReviewResponse(reviews=response)
+
+# TEMPORARY FOR KEEPING SERVER AWAKE (FREE HEROKU HOSING)
 @router.get("/wake/")
 async def wake_server() -> None:
     return None

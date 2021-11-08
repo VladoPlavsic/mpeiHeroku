@@ -1,4 +1,5 @@
 from typing import List, Optional
+from datetime import datetime
 from app.models.core import DBCoreModel
 
 # ###
@@ -426,3 +427,10 @@ class PaymentRequestDetails(DBCoreModel):
     offer_fk: int
     payment_id: str
     level: bool
+    confirmation_token: str
+
+class SubscriptionInformation(DBCoreModel):
+    for_life: bool
+    expiration_date: datetime
+    plan_name: str
+    

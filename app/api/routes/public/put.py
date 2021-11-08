@@ -3,8 +3,10 @@ from fastapi import Depends, Body
 from starlette.status import HTTP_200_OK
 
 from app.db.repositories.public.public import PublicDBRepository
+from app.cdn.repositories.public.public import PublicYandexCDNRepository
 
 from app.api.dependencies.database import get_db_repository
+from app.api.dependencies.cdn import get_cdn_repository
 
 from app.db.repositories.parsers import parse_youtube_link
 
@@ -19,6 +21,7 @@ from app.models.public import UpdatePresentationModel
 from app.models.public import UpdateAboutUsModel
 from app.models.public import UpdateFAQModel
 from app.models.public import UpdateInstructionModel
+from app.models.public import UpdateReviewModel
 
 # import response models
 from app.models.public import VideoInDB
@@ -29,6 +32,7 @@ from app.models.public import PresentationMasterInDB
 from app.models.public import AboutUsInDB
 from app.models.public import FAQInDB
 from app.models.public import InstructionInDB
+from app.models.public import ReviewInDB
 
 from app.db.repositories.types import ContentType
 
@@ -67,8 +71,6 @@ async def update_game(
     response = await db_repo.update_game(updated=game)
     return response
 
-""" NEW """
-
 @router.put("/book", response_model=BookInDB, name="public:update-book", status_code=HTTP_200_OK)
 async def update_public_book(
     updated: UpdateBookModel = Body(...),
@@ -99,8 +101,6 @@ async def update_public_practice(
     response = await db_repo.update_presentation(updated=updated, presentation=ContentType.THEORY)
     return response
 
-""" END NEW """
-
 
 @router.put("/about_us", response_model=AboutUsInDB, name="public:update-about_us", status_code=HTTP_200_OK)
 async def update_about_us(
@@ -130,4 +130,19 @@ async def update_instruction(
     ) -> InstructionInDB:
 
     response = await db_repo.update_instruction(updated=instruction)
+    return response
+
+@router.put("/review", response_model=ReviewInDB, name="public:update-review", status_code=HTTP_200_OK)
+async def update_review(
+    review: UpdateReviewModel = Body(...),
+    db_repo: PublicDBRepository = Depends(get_db_repository(PublicDBRepository)),
+    cdn_repo: PublicYandexCDNRepository = Depends(get_cdn_repository(PublicYandexCDNRepository)),
+    allowed: bool = Depends(allowed_or_denied),
+    ) -> ReviewInDB:
+
+    if review.object_key:
+        updated_key = cdn_repo.get_sharing_link_from_object_key(object_key=review.object_key)
+        review.image_url = updated_key[review.object_key]
+
+    response = await db_repo.update_review(updated=review)
     return response

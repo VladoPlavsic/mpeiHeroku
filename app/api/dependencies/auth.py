@@ -2,6 +2,7 @@ from typing import Optional
 
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
+from starlette.status import HTTP_403_FORBIDDEN
 
 from app.core.config import SECRET_KEY, API_PREFIX
 from app.models.user import UserInDB

@@ -225,7 +225,7 @@ async def get_private_lectures(
         (branch, path) = await db_repo.get_branch_by_name(grade_name=grade_name_en, subject_name=subject_name_en, branch_name=branch_name_en)
         response = await db_repo.select_material(fk=branch.id)
     else:
-        if await db_repo.check_if_content_available(user_id=user.id ,grade_name=grade_name_en, subject_name=subject_name):
+        if await db_repo.check_if_content_available(user_id=user.id ,grade_name=grade_name_en, subject_name=subject_name_en):
             (branch, path) = await db_repo.get_branch_by_name(grade_name=grade_name_en, subject_name=subject_name_en, branch_name=branch_name_en)
             response = await db_repo.select_material(fk=branch.id)
         else:
@@ -257,7 +257,7 @@ async def get_private_material(
         (lecture, path) = await db_repo.get_lecture_by_name(grade_name=grade_name_en, subject_name=subject_name_en, branch_name=branch_name_en, lecture_name=lecture_name_en)
         response = await db_repo.select_material(fk=lecture.id)
     else:
-        if await db_repo.check_if_content_available(user_id=user.id ,grade_name=grade_name_en, subject_name=subject_name):
+        if await db_repo.check_if_content_available(user_id=user.id ,grade_name=grade_name_en, subject_name=subject_name_en):
             (lecture, path) = await db_repo.get_lecture_by_name(grade_name=grade_name_en, subject_name=subject_name_en, branch_name=branch_name_en, lecture_name=lecture_name_en)
             response = await db_repo.select_material(fk=lecture.id)
         else:

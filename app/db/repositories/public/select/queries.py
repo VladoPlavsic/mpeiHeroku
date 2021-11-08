@@ -47,4 +47,7 @@ def select_all_material_part_keys_query(presentation, media_type) -> str:
     return \
         f"SELECT (public.select_all_{presentation}_{media_type}_keys()).*"
 
+def select_all_reviews_query() -> str:
+    return \
+        f"SELECT (public.select_all_reviews()).*"
 

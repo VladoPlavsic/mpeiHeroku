@@ -119,6 +119,11 @@ async def update_sharing_links_function(
         if public_quiz:
             updated = cdn_repo.get_sharing_links_from_objects(list_of_objects=public_quiz)
             await public_db_repo.update_quiz_links(quiz=updated)
+
+        public_review = await public_db_repo.select_all_review()
+        if public_review:
+            updated = cdn_repo.get_sharing_links_from_objects(list_of_objects=public_review)
+            await public_db_repo.update_review_links(review=updated)
         
         """
         END NEW

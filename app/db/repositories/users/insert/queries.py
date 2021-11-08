@@ -19,9 +19,9 @@ def set_confirmation_code_query(user_id, confirmation_code) -> str:
 
 def add_grade_to_user_query(user_id: int, grade_id: int, subscription_fk: int) -> str:
     return \
-        f"SELECT users.add_grade_to_user({user_id}, {grade_id}, {subscription_fk})"
+        f"SELECT (users.add_grade_to_user({user_id}, {grade_id}, {subscription_fk})).*"
 
 def add_subject_to_user_query(user_id, subject_id, subscription_fk: int) -> str:
     return \
-        f"SELECT users.add_subject_to_user({user_id}, {subject_id}, {subscription_fk})"
+        f"SELECT (users.add_subject_to_user({user_id}, {subject_id}, {subscription_fk})).*"
 

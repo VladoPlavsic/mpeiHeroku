@@ -32,6 +32,11 @@ def update_faq_query(id, question, answer) -> str:
     return \
         f"SELECT (public.update_faq({id}, {string_or_null(question, answer)})).*"
 
+def update_review_query(id, name, review, object_key, image_url) -> str:
+    return \
+        f"SELECT (public.update_review({id}, {string_or_null(name, review, object_key, image_url)})).*"
+
+
 # link updating
 def update_book_links_query(keys, links) -> str:
     keys = list_to_string(keys)
@@ -62,6 +67,12 @@ def update_quiz_links_query(keys, links) -> str:
     links = list_to_string(links)
     return \
         f"SELECT public.update_quiz_links('{{{keys}}}', '{{{links}}}')"
+
+def update_review_links_query(keys, links) -> str:
+    keys = list_to_string(keys)
+    links = list_to_string(links)
+    return \
+        f"SELECT public.update_review_links('{{{keys}}}', '{{{links}}}')"
 
 def update_presentation_part_links_query(keys, links, presentation, media_type) -> str:
     keys = list_to_string(keys)

@@ -19,6 +19,7 @@ from app.models.public import AnswersInDB
 from app.models.public import AboutUsCreateModel
 from app.models.public import FAQCreateModel
 from app.models.public import InstructionCreateModel
+from app.models.public import ReviewCreateModel
 
 # response models
 from app.models.public import VideoInDB
@@ -31,13 +32,13 @@ from app.models.public import QuizQuestionInDB
 from app.models.public import AboutUsInDB
 from app.models.public import FAQInDB
 from app.models.public import InstructionInDB
+from app.models.public import ReviewInDB
 
 from app.db.repositories.types import ContentType
 
 import logging
 
 logger = logging.getLogger(__name__)
-
 
 class PublicDBInsertRepository(BaseDBRepository):
     """Insert data into public db schema."""
@@ -147,3 +148,9 @@ class PublicDBInsertRepository(BaseDBRepository):
         """Tries to insert instruction. If successful returns InstructionInDB model else None."""
         response = await self._fetch_one(query=insert_instruction_query(**instruction.dict()))
         return InstructionInDB(**response) if response else None
+
+    async def insert_review(self, *, review: ReviewCreateModel) -> ReviewInDB:
+        """Tries to insert review. If successfull returns ReviewInDB model else None"""
+        response = await self._fetch_one(query=insert_review_query(**review.dict()))
+        return ReviewInDB(**response) if response else None
+

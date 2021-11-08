@@ -11,8 +11,8 @@ from app.db.repositories.users.subscriptions.queries import *
 
 
 class UsersDBSubscriptionsRepository(BaseDBRepository):
-    async def create_payment_request(self, *, user_fk: int, offer_fk: int, payment_id: str, level: int) -> None:
-        await self._fetch_one(query=create_payment_request_query(user_fk=user_fk, offer_fk=offer_fk, payment_id=payment_id, level=level))
+    async def create_payment_request(self, *, user_fk: int, offer_fk: int, payment_id: str, level: int, confirmation_token: str) -> None:
+        await self._fetch_one(query=create_payment_request_query(user_fk=user_fk, offer_fk=offer_fk, payment_id=payment_id, level=level, confirmation_token=confirmation_token))
 
     async def check_payment_request(self, *, user_fk: int, offer_fk: int, level: int) -> str:
         payment_id = await self._fetch_one(query=check_payment_request_query(user_fk=user_fk, offer_fk=offer_fk, level=level))
@@ -29,7 +29,6 @@ class UsersDBSubscriptionsRepository(BaseDBRepository):
 
     async def get_plan_details(self, *, level: int, plan_fk: int) -> Union[AvailableGradeSubscriptionPlans, AvailableSubjectSubscriptionPlans]:
         response = await self._fetch_one(query=get_plan_details_query(level=level, plan_fk=plan_fk))
-        logger.warn(plan_fk)
         return AvailableSubjectSubscriptionPlans(**response) if level else AvailableGradeSubscriptionPlans(**response)
 
     async def check_expired_subscriptions(self) -> None:

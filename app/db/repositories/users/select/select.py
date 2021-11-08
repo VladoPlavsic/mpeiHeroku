@@ -20,6 +20,10 @@ class UsersDBSelectRepository(BaseDBRepository):
         user_record = await self._fetch_one(query=get_user_by_email_query(email=email))
         return UserInDB(**user_record) if user_record else None
 
+    async def get_user_by_id(self, *, user_id: int) -> UserInDB:
+        user_record = await self._fetch_one(query=get_user_by_id_query(user_id=user_id))
+        return UserInDB(**user_record) if user_record else None
+
     async def get_user_by_username(self, *, username: str) -> UserInDB:
         user_record = await self._fetch_one(query=get_user_by_username_query(username=username))
         return UserInDB(**user_record) if user_record else None
