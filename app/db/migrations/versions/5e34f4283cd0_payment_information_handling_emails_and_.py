@@ -90,7 +90,7 @@ def upgrade() -> None:
         INSERT INTO history.grade_subscriptions(grade_fk, user_fk, price, purchased_at, month_count) VALUES(i_grade_id, i_user_id, (SELECT price FROM subscriptions.grade_subscription_plans WHERE id = i_subscription_fk), now(), (SELECT month_count FROM subscriptions.grade_subscription_plans WHERE id = i_subscription_fk));
         SELECT subscriptions.subject_subscription_plans.id INTO i_subject_sub_fk FROM subscriptions.subject_subscription_plans WHERE month_count = (SELECT month_count FROM subscriptions.grade_subscription_plans WHERE id = i_subscription_fk);
         FOR temprow IN
-            SELECT id FROM private.subject WHERE private.subject.fk = i_grade_id
+            SELECT id FROM private.subject WHERE private.subject.fk = i_subject_sub_fk
         LOOP
             PERFORM users.add_subject_to_user(i_user_id, temprow.id, i_subject_sub_fk);
         END LOOP;

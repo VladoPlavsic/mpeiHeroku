@@ -123,3 +123,7 @@ def create_reset_password_email(recovery_hash: str) -> str:
 
     return page
 
+def create_reactivate_profile_email(reactivate_hash: str) -> str:
+    """Generates profile reactivation email"""
+    reactivate_profile_url = f"{SITE_URL}/reactivate/account/{reactivate_hash}"
+    return reactivate_profile_url

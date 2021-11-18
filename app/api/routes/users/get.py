@@ -11,6 +11,7 @@ from app.db.repositories.users.users import UsersDBRepository
 from app.api.dependencies.database import get_db_repository
 
 from app.models.user import PublicUserInDB, UserInDB, AdminAvailableData
+from app.models.private import SubscriptionHistory
 
 from app.models.token import AccessToken
 from app.core.config import AWS_SECRET_ACCESS_KEY, AWS_SECRET_KEY_ID
@@ -58,3 +59,20 @@ async def confirm_email(
         return PublicUserInDB(**user.dict(), access_token=access_token)
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Unhandled exception raised in user. Exited with {e}")
+
+@router.get("/profile")
+async def get_user_information(
+    user: UserInDB = Depends(get_user_from_token),
+    db_repo: UsersDBRepository = Depends(get_db_repository(UsersDBRepository)),
+    ) -> PublicUserInDB:
+
+    response = await db_repo.get_user_by_id(user_id=user.id)
+    return PublicUserInDB(**response.dict())
+
+@router.get("/subscription/history")
+async def get_subscription_history(
+    user: UserInDB = Depends(get_user_from_token),
+    db_repo: UsersDBRepository = Depends(get_db_repository(UsersDBRepository)),
+    ) -> SubscriptionHistory:
+
+    return await db_repo.get_subscription_history(user_id=user.id)

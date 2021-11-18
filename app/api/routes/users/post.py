@@ -6,13 +6,14 @@ from starlette.status import HTTP_200_OK
 
 from app.models.email import QuestionEmail
 
-from app.api.dependencies.email import send_message, create_confirm_code_msg, create_confirm_link
+from app.api.dependencies.email import send_message, create_confirm_code_msg, create_confirm_link, create_reactivate_profile_email
 
 from app.db.repositories.users.users import UsersDBRepository
 from app.api.dependencies.database import get_db_repository
 from app.api.dependencies.auth import get_user_from_token, auth_service
 
 from app.api.dependencies.auth import generate_confirmation_code
+from app.api.dependencies.crons import handle_deactivated_profiles
 
 from app.models.token import AccessToken, RefreshToken
 
@@ -91,6 +92,13 @@ async def user_login_with_email_and_password_send_code(
             headers={"WWW-Authenticate": "Bearer"},
         )
 
+    if not user.is_active:
+        raise HTTPException(
+            status_code=406,
+            detail="This account has been deactivated.",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
     confirmation_code = generate_confirmation_code()
     confirmation_code = await user_repo.set_confirmation_code(user_id=user.id, confirmation_code=confirmation_code)
 
@@ -156,6 +164,67 @@ async def user_check_expired_subscriptions(
     ) -> None:
 
     background_task.add_task(user_repo.check_expired_subscriptions)
+    return None
+
+@router.post("/deactivated/check")
+async def users_check_deactivated_profiles(
+    background_task: BackgroundTasks,
+    user_repo: UsersDBRepository = Depends(get_db_repository(UsersDBRepository)),
+    ) -> None:
+
+    one_month_warning = await user_repo.select_deactivated_profiles_for_warning_month()
+    one_week_warning = await user_repo.select_deactivated_profiles_for_warning_week()
+    deletion_profiles = await user_repo.select_deactivated_profiles_for_deletion()
+
+    background_task.add_task(handle_deactivated_profiles, one_month_warning=one_month_warning, one_week_warning=one_week_warning, deletion_profiles=deletion_profiles)
+    
+    for profile in deletion_profiles:
+        await user_repo.delete_profile(user_id=profile.id)
+    return None
+
+   
+@router.post("/request/profile/reactivate", status_code=HTTP_200_OK)
+async def reactivate_profile_request(
+    email: str,
+    background_task: BackgroundTasks,
+    user_repo: UsersDBRepository = Depends(get_db_repository(UsersDBRepository)),
+    ) -> None:
+
+    user = await user_repo.get_user_by_email(email=email)
+
+    if not user:
+        raise HTTPException(
+            status_code=404,
+            detail="User not found with given email!",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    
+    reactivate_hash = await user_repo.create_confirmation_hash_for_reactivation(user_id=user.id)
+    if not reactivate_hash:
+        raise HTTPException(
+            status_code=404,
+            detail="Profile not deactivated!",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    reactivate_url = create_reactivate_profile_email(reactivate_hash=reactivate_hash)
+    background_task.add_task(send_message, subject="Reactivate profile request", message_text=f"To reactivate your profile visit this url: {reactivate_url}", to=user.email)
+    return None
+
+@router.post("/profile/reactivate", status_code=HTTP_200_OK)
+async def reactivate_profile(
+    reactivate_hash: str,
+    user_repo: UsersDBRepository = Depends(get_db_repository(UsersDBRepository)),
+    ) -> None:
+
+    response = await user_repo.activate_profile(reactivation_hash=reactivate_hash)
+    if not response:
+        raise HTTPException(
+            status_code=403,
+            detail="Reactivation failed!",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
     return None
 
 # YooKassa Confirmation Notifications

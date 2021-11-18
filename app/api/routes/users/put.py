@@ -7,6 +7,7 @@ from app.db.repositories.users.users import UsersDBRepository
 from app.api.dependencies.database import get_db_repository
 
 from app.api.dependencies.auth import get_user_from_token
+from app.models.user import UserUpdate, PublicUserInDB
 
 # YooMoney
 import uuid
@@ -42,7 +43,8 @@ async def user_buy_grade_access(
             "type": "embedded",
         },
         "capture": True,
-        "description": plan_details.name
+        "description": plan_details.name,
+        "save_payment_method": False
     }, uuid.uuid4())
     await user_repo.create_payment_request(user_fk=user.id, offer_fk=offer_fk, payment_id=payment.id, level=0, confirmation_token=payment.confirmation.confirmation_token)
     #else:
@@ -78,7 +80,8 @@ async def user_buy_subject_access(
             "type": "embedded",
         },
         "capture": True,
-        "description": plan_details.name
+        "description": plan_details.name,
+        "save_payment_method": False
     }, uuid.uuid4())
     await user_repo.create_payment_request(user_fk=user.id, offer_fk=offer_fk, payment_id=payment.id, level=1, confirmation_token=payment.confirmation.confirmation_token)
     #else:
@@ -121,7 +124,7 @@ async def confirm_password_recovery(
 
 @router.put("/recover/password")
 async def recover_password(
-    recovery_hash: str,
+    recovery_hash: str = Body(..., embed=True),
     password: str = Body(..., embed=True),
     user_repo: UsersDBRepository = Depends(get_db_repository(UsersDBRepository)),
     ) -> None:
@@ -132,3 +135,54 @@ async def recover_password(
         raise HTTPException(status_code=400, detail="Ooops! Something went wrong. Please try creating new recovery request!")
 
     return response
+
+@router.put("/deactivate/profile")
+async def deactivate_profile(
+    password: str = Body(..., embed=True),
+    user = Depends(get_user_from_token),
+    user_repo: UsersDBRepository = Depends(get_db_repository(UsersDBRepository)),
+    ) -> None:
+
+    user = await user_repo.authenticate_user(email=user.email, password=password)
+
+    if not user:
+        raise HTTPException(
+            status_code=401,
+            detail="Authentication was unsuccessful.",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    await user_repo.deactivate_profile(user_id=user.id)
+    return None
+    
+
+@router.put("/delete/profile")
+async def delete_profile(
+    password: str = Body(..., embed=True),
+    user = Depends(get_user_from_token),
+    user_repo: UsersDBRepository = Depends(get_db_repository(UsersDBRepository)),
+    ) -> None:
+
+    user = await user_repo.authenticate_user(email=user.email, password=password)
+
+    if not user:
+        raise HTTPException(
+            status_code=401,
+            detail="Authentication was unsuccessful.",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    await user_repo.delete_profile(user_id=user.id)
+    return None
+ 
+@router.put("/update")
+async def update_profile(
+    updated: UserUpdate = Body(...),
+    user = Depends(get_user_from_token),
+    user_repo: UsersDBRepository = Depends(get_db_repository(UsersDBRepository)),
+    ) -> PublicUserInDB:
+
+    response = await user_repo.update_user_information(id_=user.id, updated=updated)
+    return response
+
+

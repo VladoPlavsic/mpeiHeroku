@@ -256,6 +256,7 @@ class PrivateDBSelectRepository(BaseDBRepository):
 
         return QuizResults(results=response, lecture_id=quiz_results.lecture_id)
 
+
     async def check_if_content_available(self, *, user_id: int, grade_name: str, subject_name: str) -> bool:
         """Checks if requested content is available to user requesting it.
         

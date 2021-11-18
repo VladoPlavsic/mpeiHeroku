@@ -22,6 +22,7 @@ class JWTUserMeta(BaseModel):
     school: str
     email_verified: bool
     is_superuser: bool
+    is_active: bool
 
 
 class JWTPayload(JWTMeta, JWTCreds, JWTUserMeta):

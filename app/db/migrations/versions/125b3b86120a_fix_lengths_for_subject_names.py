@@ -823,7 +823,7 @@ def remove_unique_constraint_our_team() -> None:
             inserted_id int;
         BEGIN 
         INSERT INTO about.our_team ("order", name, role, profession, description, object_key, photo_link)
-        VALUES (i_order, i_name, i_role,i_profession, i_description, i_object_key, i_photo_link) RETURNING about.our_team."order" INTO inserted_id;
+        VALUES (i_order, i_name, i_role,i_profession, i_description, i_object_key, i_photo_link) RETURNING about.our_team.id INTO inserted_id;
         RETURN QUERY (SELECT * FROM about.our_team WHERE about.our_team.id = inserted_id);
         END $$ LANGUAGE plpgsql;
     ''')

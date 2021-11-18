@@ -57,6 +57,13 @@ def get_application():
         logger.warn(f"sending POST request to {config.RESFUL_SERVER_URL}/api/users/subscriptions/check/")
         requests.post(f"{config.RESFUL_SERVER_URL}/api/users/subscriptions/check/")
 
+    # Daily check for deactivated profiles
+    @app.on_event("startup")
+    @repeat_every(seconds=24 * 60 * 60)
+    def deactivated_profiles_check():
+        logger.warn(f"sending POST request to {config.RESFUL_SERVER_URL}/api/users/deactivated/check/")
+        requests.post(f"{config.RESFUL_SERVER_URL}/api/users/deactivated/check/")
+
     # Keep server alive
     @app.on_event("startup")
     @repeat_every(seconds=60 * 25) # update every 25 minutes (Keep server alive, remove on paid version)

@@ -714,6 +714,8 @@ def drop_public_procedures() -> None:
     for proc in procedures:
         op.execute(f"DROP FUNCTION public.{proc} CASCADE")
 
+
+# Delete these triggers probably!
 def drop_triggers() -> None:
     triggers = [
         'update_about_us_order_numbers_after_delete_trigger ON public.about_us',

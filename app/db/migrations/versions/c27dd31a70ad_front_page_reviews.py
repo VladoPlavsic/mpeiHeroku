@@ -71,10 +71,10 @@ def upgrade() -> None:
 
     op.execute("""
     CREATE OR REPLACE FUNCTION public.select_all_review_keys()
-    RETURNS TABLE(id int, object_key text)
+    RETURNS TABLE(object_key text)
     AS $$
     BEGIN
-        RETURN QUERY(SELECT public.reviews.id, public.reviews.object_key FROM public.reviews);
+        RETURN QUERY(SELECT public.reviews.object_key FROM public.reviews);
     END $$ LANGUAGE plpgsql;
     """)
 

@@ -122,8 +122,7 @@ def create_user_authentication_functions() -> None:
     AS $$
     BEGIN 
         UPDATE users.users SET
-            jwt_token = token,
-            is_active = 't'
+            jwt_token = token
         WHERE users.users.id = user_id;
     END $$ LANGUAGE plpgsql;
     """)

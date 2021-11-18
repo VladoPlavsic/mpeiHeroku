@@ -70,7 +70,7 @@ def update_login_logic() -> None:
         i_salt text, 
         i_password text, 
         i_email_verified boolean default 'f',
-        i_is_active boolean default 'f',
+        i_is_active boolean default 't',
         i_is_superuser boolean default 'f',
         i_jwt_token text default null)
     RETURNS TABLE (id int, full_name text, email text, phone_number varchar(20), city text, school text, password text, salt text, jwt_token text)

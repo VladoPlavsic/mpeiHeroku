@@ -12,7 +12,7 @@ class UserBase(BaseModel):
     city: str
     school: str
     email_verified: bool = False
-    is_active: bool = False
+    is_active: bool = True
     is_superuser: bool = False
 
 class UserCreate(BaseModel):
@@ -25,8 +25,11 @@ class UserCreate(BaseModel):
     full_name: str
 
 class UserUpdate(BaseModel):
-    """Users are allowed to update their email"""
-    email: Optional[EmailStr]
+    """Users are allowed to update their personal data, except email"""
+    full_name: Optional[str]
+    phone_number: Optional[str]
+    city: Optional[str]
+    school: Optional[str]
 
 class UserPasswordUpdate(BaseModel):
     """Users can change their password"""
@@ -46,6 +49,7 @@ class PublicUserInDB(UserBase):
     id: int
     access_token: Optional[AccessToken]
     refresh_token: Optional[RefreshToken]
+    full_name: Optional[str]
 
 # availble subjects/grades
 class UserAvailableGrades(BaseModel):
@@ -63,3 +67,6 @@ class AdminAvailableData(BaseModel):
     AWS_SECRET_KEY_ID: Optional[str]
     AWS_SECRET_ACCESS_KEY: Optional[str]
     
+class UserDeletion(BaseModel):
+    id: int
+    email: Optional[EmailStr]

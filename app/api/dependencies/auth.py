@@ -17,9 +17,9 @@ logger = logging.getLogger(__name__)
 async def get_user_from_token(
     *,
     token: str,
-    user_repo: UsersDBRepository = Depends(get_db_repository(UsersDBRepository)),
+    user_repo: UsersDBRepository = Depends(get_db_repository(UsersDBRepository)), # probably remove this!
     ) -> Optional[UserInDB]:
-    """Takes in JWT token. Returns UserInDB or raises 401 if token expired or not valid"""
+    """Takes in JWT token. Returns UserInDB or raises 401 if token expired or not valid and 406 if account is deactivated"""
     try:
         user = auth_service.get_user_from_token(token=token, secret_key=str(SECRET_KEY))
     except Exception as e:
@@ -27,6 +27,9 @@ async def get_user_from_token(
 
     if not user:
         raise HTTPException(status_code=404, detail="No user found!")
+
+    if not user.is_active:
+        raise HTTPException(status_code=406, detail="Account deactivated")
 
     return user
 

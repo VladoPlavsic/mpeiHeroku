@@ -8,7 +8,7 @@ from app.cdn.repositories.private.private import PrivateYandexCDNRepository
 from app.api.dependencies.database import get_db_repository
 from app.api.dependencies.cdn import get_cdn_repository
 
-from app.api.dependencies.auth import allowed_or_denied
+from app.api.dependencies.auth import allowed_or_denied, get_user_from_token
 
 from app.cdn.types import DefaultFormats
 
@@ -230,7 +230,7 @@ async def create_private_quiz(
 async def get_quiz_results(
     quiz_results: QuizGetResultsModel = Body(...),
     db_repo: PrivateDBRepository = Depends(get_db_repository(PrivateDBRepository)),
-    allowed: bool = Depends(allowed_or_denied),
+    allowed: bool = Depends(get_user_from_token),
     ) -> QuizResults:
 
     response = await db_repo.check_quiz_results(quiz_results=quiz_results)
