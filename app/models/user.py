@@ -75,7 +75,6 @@ class ActiveSubscriptionInformationCore(DBCoreModel):
     class_name: str
     expiration_date: datetime
     for_life: bool
-    price: float
 
 class ActiveSubscriptionInformationGrade(ActiveSubscriptionInformationCore):
     pass
