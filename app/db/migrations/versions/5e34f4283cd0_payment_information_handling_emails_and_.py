@@ -116,7 +116,6 @@ def upgrade() -> None:
         RETURN QUERY (SELECT users.user_subjects.for_life, users.user_subjects.expiration_date, subscriptions.grade_subscription_plans.name FROM users.user_subjects INNER JOIN subscriptions.grade_subscription_plans ON id = i_subscription_fk WHERE user_fk = i_user_id AND subject_fk = i_subject_id);
     END $$ LANGUAGE plpgsql;
     """)
-    pass
 
 def return_all_functions() -> None:
     op.execute("DROP FUNCTION users.add_grade_to_user")

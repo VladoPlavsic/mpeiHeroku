@@ -18,6 +18,7 @@ from app.models.public import AboutUsInDB
 from app.models.public import FAQInDB
 from app.models.public import InstructionInDB
 from app.models.public import ReviewInDB
+from app.models.public import TitlesInDB
 
 from app.models.public import MaterialAllModel
 from app.models.public import AudioImagesAllModel
@@ -174,3 +175,9 @@ class PublicDBSelectRepository(BaseDBRepository):
             ))
 
         return QuizResults(results=response)
+
+    async def get_titles(self) -> TitlesInDB:
+        """Returns all titles for main page"""
+        response = await self._fetch_one(query=select_titles_query())
+
+        return TitlesInDB(**response) if response else []

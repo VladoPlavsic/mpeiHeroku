@@ -23,3 +23,13 @@ def get_grade_subscription_history_query(user_id: int) -> str:
 def get_subject_subscription_history_query(user_id: int) -> str:
     return \
         f"SELECT (history.get_subject_subscription_history({user_id})).*"
+
+# active subscriptions
+def get_active_grade_subscriptions_query(user_id: int) -> str:
+    return \
+        f"SELECT (subscriptions.get_grade_subscriptions({user_id})).*"
+
+def get_active_subject_subscriptions_query(user_id: int) -> str:
+    return \
+        f"SELECT (subscriptions.get_subject_subscriptions({user_id})).*"
+

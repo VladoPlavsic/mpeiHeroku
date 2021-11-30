@@ -264,3 +264,4 @@ async def get_private_material(
             raise HTTPException(status_code=402, detail="Ooops! Looks like you don't have access to this content. Check our offers to gain access!")
   
     return MaterialResponse(material=response, path=path, fk=lecture.id)
+

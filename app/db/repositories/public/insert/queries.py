@@ -63,3 +63,10 @@ def insert_instruction_query(order, title, description) -> str:
 def insert_review_query(name: str, review: str, object_key: str, image_url: str) -> str:
     return \
         f"SELECT (public.insert_review({string_or_null(name, review, object_key, image_url)})).*"
+
+def insert_title_query(main_title: str, example_title: str, subscription_instruction_title: str, questions_title: str, questions_sub_title: str) -> str:
+    return \
+        f"SELECT (public.insert_title({string_or_null(main_title, example_title, subscription_instruction_title, questions_title, questions_sub_title)})).*"
+
+
+

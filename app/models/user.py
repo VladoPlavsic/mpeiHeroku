@@ -1,8 +1,8 @@
 import string
 from datetime import datetime
-from typing import Optional, Any
+from typing import Optional, Any, List
 from pydantic import EmailStr, constr, validator
-from app.models.core import BaseModel
+from app.models.core import BaseModel, DBCoreModel
 from app.models.token import AccessToken, RefreshToken
 
 class UserBase(BaseModel):
@@ -70,3 +70,33 @@ class AdminAvailableData(BaseModel):
 class UserDeletion(BaseModel):
     id: int
     email: Optional[EmailStr]
+
+class ActiveSubscriptionInformationCore(DBCoreModel):
+    class_name: str
+    expiration_date: datetime
+    for_life: bool
+    price: float
+
+class ActiveSubscriptionInformationGrade(ActiveSubscriptionInformationCore):
+    pass
+
+class ActiveSubscriptionInformationSubject(ActiveSubscriptionInformationCore):
+    subject_name: str
+
+class ActiveSubscriptions(DBCoreModel):
+    grades: List[ActiveSubscriptionInformationGrade]
+    subjects: List[ActiveSubscriptionInformationSubject]
+
+class SubscriptionHistoryUnit(DBCoreModel):
+    name_ru: str
+    price: float
+    purchased_at: datetime
+    month_count: int    
+
+class SubscriptionHistory(DBCoreModel):
+    grades: List[SubscriptionHistoryUnit]
+    subjects: List[SubscriptionHistoryUnit]
+class SubscriptionInformation(DBCoreModel):
+    for_life: bool
+    expiration_date: datetime
+    plan_name: str

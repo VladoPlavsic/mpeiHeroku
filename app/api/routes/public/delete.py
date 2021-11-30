@@ -170,3 +170,48 @@ async def delete_review(
 
     await db_repo.delete_review(id=id)
     return None
+
+@router.delete("/title/main", response_model=None, name="public:delete-main-title", status_code=HTTP_200_OK)
+async def delete_main_title(
+    db_repo: PublicDBRepository = Depends(get_db_repository(PublicDBRepository)),
+    allowed: bool = Depends(allowed_or_denied),
+    ) -> None:
+
+    await db_repo.delete_main_title()
+    return None
+
+@router.delete("/title/example", response_model=None, name="public:delete-example-title", status_code=HTTP_200_OK)
+async def delete_example_title(
+    db_repo: PublicDBRepository = Depends(get_db_repository(PublicDBRepository)),
+    allowed: bool = Depends(allowed_or_denied),
+    ) -> None:
+
+    await db_repo.delete_example_title()
+    return None
+
+@router.delete("/title/subscriptions", response_model=None, name="public:delete-subscriptions-title", status_code=HTTP_200_OK)
+async def delete_subscriptions_title(
+    db_repo: PublicDBRepository = Depends(get_db_repository(PublicDBRepository)),
+    allowed: bool = Depends(allowed_or_denied),
+    ) -> None:
+
+    await db_repo.delete_subscriptions_title()
+    return None
+
+@router.delete("/title/questions", response_model=None, name="public:delete-questions-title", status_code=HTTP_200_OK)
+async def delete_questions_title(
+    db_repo: PublicDBRepository = Depends(get_db_repository(PublicDBRepository)),
+    allowed: bool = Depends(allowed_or_denied),
+    ) -> None:
+
+    await db_repo.delete_questions_title()
+    return None
+
+@router.delete("/title/questions/sub", response_model=None, name="public:delete-questions-sub", status_code=HTTP_200_OK)
+async def delete_questions_sub_title(
+    db_repo: PublicDBRepository = Depends(get_db_repository(PublicDBRepository)),
+    allowed: bool = Depends(allowed_or_denied),
+    ) -> None:
+
+    await db_repo.delete_questions_sub_title()
+    return None

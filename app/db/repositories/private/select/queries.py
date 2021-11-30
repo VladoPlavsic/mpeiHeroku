@@ -134,3 +134,4 @@ def get_available_grade_offers_query() -> str:
 def get_available_subject_offers_query() -> str:
     return \
         f"SELECT (subscriptions.get_available_subject_offers()).*"
+        

@@ -22,6 +22,7 @@ from app.models.public import AboutUsPostModel
 from app.models.public import FAQPostModel
 from app.models.public import InstructionPostModel
 from app.models.public import ReviewPostModel
+from app.models.public import TitlesPostModel
 
 # create models 
 from app.models.public import PresentationCreateModel
@@ -43,6 +44,7 @@ from app.models.public import AboutUsInDB
 from app.models.public import FAQInDB
 from app.models.public import InstructionInDB
 from app.models.public import ReviewInDB
+from app.models.public import TitlesInDB
 
 from app.cdn.types import DefaultFormats
 
@@ -264,4 +266,14 @@ async def create_review(
     shared = cdn_repo.get_sharing_link_from_object_key(object_key=review.object_key)
     review = ReviewCreateModel(**review.dict(), image_url=shared[review.object_key])
     response = await db_repo.insert_review(review=review)
+    return response
+
+@router.post("/titles", response_model=TitlesInDB, name="public:post-titles", status_code=HTTP_201_CREATED)
+async def insert_titles(
+    titles: TitlesPostModel = Body(...),
+    db_repo: PublicDBRepository = Depends(get_db_repository(PublicDBRepository)),
+    allowed: bool = Depends(allowed_or_denied),
+    ) -> TitlesInDB:
+
+    response = await db_repo.insert_title(titles=titles)
     return response

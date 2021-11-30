@@ -394,16 +394,6 @@ class OfferDetails(DBCoreModel):
     product_fk: int
     subscription_fk: int
 
-class SubscriptionHistoryUnit(DBCoreModel):
-    name_ru: str
-    price: float
-    purchased_at: datetime
-    month_count: int    
-
-class SubscriptionHistory(DBCoreModel):
-    grades: List[SubscriptionHistoryUnit]
-    subjects: List[SubscriptionHistoryUnit]
-
 class CreateGradeSubscriptionPlan(SubscriptionsBase):
     pass
 
@@ -438,9 +428,3 @@ class PaymentRequestDetails(DBCoreModel):
     payment_id: str
     level: bool
     confirmation_token: str
-
-class SubscriptionInformation(DBCoreModel):
-    for_life: bool
-    expiration_date: datetime
-    plan_name: str
-    

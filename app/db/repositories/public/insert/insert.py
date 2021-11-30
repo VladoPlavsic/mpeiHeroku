@@ -20,6 +20,7 @@ from app.models.public import AboutUsCreateModel
 from app.models.public import FAQCreateModel
 from app.models.public import InstructionCreateModel
 from app.models.public import ReviewCreateModel
+from app.models.public import TitlesCreateModel
 
 # response models
 from app.models.public import VideoInDB
@@ -33,6 +34,7 @@ from app.models.public import AboutUsInDB
 from app.models.public import FAQInDB
 from app.models.public import InstructionInDB
 from app.models.public import ReviewInDB
+from app.models.public import TitlesInDB
 
 from app.db.repositories.types import ContentType
 
@@ -154,3 +156,7 @@ class PublicDBInsertRepository(BaseDBRepository):
         response = await self._fetch_one(query=insert_review_query(**review.dict()))
         return ReviewInDB(**response) if response else None
 
+    async def insert_title(self, *, titles: TitlesCreateModel) -> TitlesInDB:
+        """Inserts main page titles if there are no entries in db - else update existing"""
+        response = await self._fetch_one(query=insert_title_query(**titles.dict()))
+        return TitlesInDB(**response) if response else []

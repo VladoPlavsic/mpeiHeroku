@@ -296,3 +296,21 @@ class UpdateIntroVideoModel(UpdateCoreModel):
 
 class IntroVideoAllResponse(DBCoreModel):
     intro: Optional[IntroVideoInDB]
+
+class TitlesCoreModel(DBCoreModel):
+    main_title: Optional[str]
+    example_title: Optional[str]
+    subscription_instruction_title: Optional[str]
+    questions_title: Optional[str]
+    questions_sub_title: Optional[str]
+
+class TitlesPostModel(TitlesCoreModel):
+    pass
+
+class TitlesCreateModel(TitlesCoreModel):
+    pass
+class TitlesInDB(TitlesCoreModel):
+    pass
+
+class TitlesResponseModel(TitlesCoreModel):
+    pass

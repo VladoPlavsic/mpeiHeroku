@@ -4,7 +4,7 @@ from app.db.repositories.users.insert.queries import *
 
 from app.models.user import UserCreate
 from app.models.user import UserInDB, UserInDB
-from app.models.private import SubscriptionInformation
+from app.models.user import SubscriptionInformation
 
 class UsersDBInsertRepository(BaseDBRepository):
 

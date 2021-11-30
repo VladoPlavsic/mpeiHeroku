@@ -10,8 +10,11 @@ from app.db.repositories.users.select.queries import *
 from app.services import auth_service
 
 from app.models.user import UserInDB
-from app.models.private import SubscriptionHistoryUnit
-from app.models.private import SubscriptionHistory
+from app.models.user import SubscriptionHistoryUnit
+from app.models.user import SubscriptionHistory
+from app.models.user import ActiveSubscriptionInformationGrade
+from app.models.user import ActiveSubscriptionInformationSubject
+from app.models.user import ActiveSubscriptions
 
 class UsersDBSelectRepository(BaseDBRepository):
     def __init__(self, db: Database) -> None:
@@ -56,3 +59,15 @@ class UsersDBSelectRepository(BaseDBRepository):
         subjects = [SubscriptionHistoryUnit(**subject) for subject in subjects_history]
 
         return SubscriptionHistory(grades=grades, subjects=subjects)
+
+    async def get_active_subscriptions(self, *, user_id: int) -> ActiveSubscriptions:
+        """Return active user grade subscriptions"""
+        active_grades = await self._fetch_many(query=get_active_grade_subscriptions_query(user_id=user_id))
+        active_subjects = await self._fetch_many(query=get_active_subject_subscriptions_query(user_id=user_id))
+
+        active_grades = [ActiveSubscriptionInformationGrade(**grade) for grade in active_grades]
+        active_subjects = [ActiveSubscriptionInformationSubject(**subject) for subject in active_subjects]
+
+        return ActiveSubscriptions(grades=active_grades, subjects=active_subjects)
+
+

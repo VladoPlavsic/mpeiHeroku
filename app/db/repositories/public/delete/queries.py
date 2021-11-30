@@ -45,4 +45,23 @@ def delete_instruction_query(order_number) -> str:
 def delete_review_query(id) -> str:
     return \
         f"SELECT public.delete_review({id})"
+
+def delete_main_title_query() -> str:
+    return \
+        f"SELECT public.delete_main_title()"
         
+def delete_example_title_query() -> str:
+    return \
+        f"SELECT public.delete_example_title()"
+
+def delete_subscriptions_title_query() -> str:
+    return \
+        f"SELECT public.delete_subscriptions_title()"
+
+def delete_questions_title_query() -> str:
+    return \
+        f"SELECT public.delete_questions_title()"
+
+def delete_questions_sub_title_query() -> str:
+    return \
+        f"SELECT public.delete_questions_sub_title()"
